@@ -1,0 +1,32 @@
+Package: cthllm
+Title: Evaluate LLM Performance on Clinical Travel Health Questions
+Version: 0.0.0.9000
+Authors@R: 
+    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+Description: A package to evaluate Large Language Models (LLMs) performance on
+    clinical travel health questions. It provides a framework to test different
+    LLMs with various answering modalities and assess their performance.
+License: CC BY 4.0
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    targets (>= 1.10.0),
+    tarchetypes (>= 0.11.0),
+    ellmer (>= 0.1.1),
+    dplyr (>= 1.1.4),
+    stringr (>= 1.5.1),
+    purrr (>= 1.0.2),
+    cli (>= 3.6.3),
+    rlang (>= 1.1.5),
+    readr (>= 2.1.5),
+    pak (>= 0.8.0.1),
+    ggplot2 (>= 3.5.1)
+Config/testthat/edition: 3
+Suggests:
+    testthat (>= 3.0.0),
+    withr,
+    knitr,
+    rmarkdown,
+    here (>= 1.0.1),
+    mockery (>= 0.4.4)

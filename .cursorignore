@@ -1,0 +1,6 @@
+*.env
+.env
+*.Rprofile
+.Rprofile
+*.Renviron
+.Renviron

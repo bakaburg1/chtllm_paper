@@ -1,0 +1,1 @@
+For small models, 8k context, temp 0.5, and 2 repetition penalty, otherwise they go in a loop
