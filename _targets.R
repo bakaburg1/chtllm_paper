@@ -81,6 +81,7 @@ list(
     c("E")  # E = ERROR
   ),
 
+  # Define which questions to process, 1:42 is all of them
   tar_target(
     question_ids,
     1:42 # max is 42
@@ -226,6 +227,9 @@ list(
       # Process response and determine status
       processed <- extract_answer(response$answer)
       status <- determine_status(processed, combinations$option_correct)
+
+      cat("Reponse:\n", response$answer)
+      print(paste("Status:", status))
 
       # Create result row
       new_result <- tibble(
