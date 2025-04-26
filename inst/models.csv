@@ -26,7 +26,6 @@ llama-4-scout,openrouter,meta-llama/llama-4-scout,,classic,0.5,1,0.34
 qwen-qwq-32b,openrouter,qwen/qwq-32b:nitro,,reasoning,0.5,1,0.39
 lfm-40b,openrouter,liquid/lfm-40b,,classic,0.5,1,0.15
 lfm-7b,openrouter,liquid/lfm-7b,,classic,0.5,1,0.01
-llama-3.1-sonar-huge,openrouter,perplexity/llama-3.1-sonar-huge-128k-online,,classic,0.5,1,5.0
 llama-3.1-sonar-large,openrouter,perplexity/llama-3.1-sonar-large-128k-online,,classic,0.5,1,1.0
 perplexity-sonar-reasoning,openrouter,perplexity/sonar-reasoning,,reasoning,0.5,1,5.0
 mistral-large-2411,openrouter,mistralai/mistral-large-2411,,classic,0.5,1,6.0
