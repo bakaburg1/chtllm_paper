@@ -1,0 +1,20 @@
+# OpenAI API key
+OPENAI_API_KEY="***"
+
+# Anthropic API key
+CLAUDE_API_KEY="***"
+
+# Gemini API key
+GEMINI_API_KEY="***"
+
+# OpenRouter API key
+OPENROUTER_API_KEY="***"
+
+# Groq API key
+GROQ_API_KEY="***"
+
+# Parser model ID
+PARSER_MODEL_ID="parser-model"
+
+# Test model ID
+TEST_MODEL_ID="qwen2.5-coder-1.5b-instruct-mlx@8bit"
