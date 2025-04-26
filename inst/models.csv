@@ -6,8 +6,12 @@ deepseek-r1,openrouter,deepseek/deepseek-r1,,reasoning,0.5,1
 deepseek-r1-distill-qwen-32b,ollama,deepseek-r1-distill-qwen-32b,http://localhost:1234,reasoning,0.5,0
 gemini-2.0-flash-exp,openrouter,google/gemini-2.0-flash-exp:free,,classic,0.5,1
 gemini-2.0-flash-thinking-exp,openrouter,google/gemini-2.0-flash-thinking-exp:free,,reasoning,0.5,1
+gemini-2.5-pro-exp,openrouter,google/gemini-2.5-pro-exp-03-25:free,,reasoning,0.5,1
+gemma-3,openrouter,google/gemma-3-27b-it,,classic,0.5,1
 gpt-4o,openai,gpt-4o-2024-08-06,,classic,0.5,1
+gpt-4o-search,openrouter,openai/gpt-4o-search-preview,,classic,0.5,1
 gpt-4o-mini,openai,gpt-4o-mini,,classic,0.5,1
+gpt-4o-mini-search,openrouter,openai/gpt-4o-mini-search-preview,,classic,0.5,1
 chatgpt-4o-latest,openai,chatgpt-4o-latest,,classic,0.5,1
 o1,openai,o1-2024-12-17,,reasoning,0.5,1
 o1-mini,openai,o1-mini-2024-09-12,,reasoning,0.5,1
@@ -17,6 +21,9 @@ groq-deepseek-r1-distill-qwen-32b,groq,deepseek-r1-distill-qwen-32b,,reasoning,0
 groq-deepseek-r1-distill-llama-70b,groq,deepseek-r1-distill-llama-70b,,reasoning,0.5,1
 groq-llama-3.1-8b-instant,groq,llama-3.1-8b-instant,,classic,0.5,1
 groq-llama-3.3-70b-versatile,groq,llama-3.3-70b-versatile,,classic,0.5,1
+llama-4-maverick,openrouter,meta-llama/llama-4-maverick,,classic,0.5,1
+llama-4-scout,openrouter,meta-llama/llama-4-scout,,classic,0.5,1
+qwen-qwq-32b,openrouter,qwen/qwq-32b:nitro,,reasoning,0.5,1
 lfm-40b,openrouter,liquid/lfm-40b,,classic,0.5,1
 lfm-7b,openrouter,liquid/lfm-7b,,classic,0.5,1
 llama-3.1-sonar-huge,openrouter,perplexity/llama-3.1-sonar-huge-128k-online,,classic,0.5,0
@@ -28,7 +35,7 @@ ms-phi-4,openrouter,microsoft/phi-4,,classic,0.5,1
 qwen2.5-32b-instruct-mlx,ollama,qwen2.5-32b-instruct-mlx,http://localhost:1234,classic,0.5,0
 qwen2.5-coder-1.5b-instruct-mlx@4bit,ollama,qwen2.5-coder-1.5b-instruct-mlx@4bit,http://localhost:1234,classic,0.5,0
 qwen2.5-coder-1.5b-instruct-mlx@8bit,ollama,qwen2.5-coder-1.5b-instruct-mlx@8bit,http://localhost:1234,classic,0.5,0
-qwen2.5-coder-32b-instruct-mlx,ollama,qwen2.5-coder-32b-instruct-mlx,http://localhost:1234,classic,0.5,0
+qwen2.5-coder-32b-instruct-mlx,ollama,qwen2.5-coder-32b-instruct-mlx,http://localhost:1234,classic,0.5,1
 r1-distill-qwen-1.5b@4bit,ollama,deepseek-r1-distill-qwen-1.5b@4bit,http://localhost:1234,reasoning,0.5,0
 r1-distill-qwen-1.5b@8bit,ollama,deepseek-r1-distill-qwen-1.5b@8bit,http://localhost:1234,reasoning,0.5,0
 parser-model,openrouter,google/gemini-2.0-flash-001,,classic,0.5,0
