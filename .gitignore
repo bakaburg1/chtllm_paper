@@ -50,6 +50,7 @@ rsconnect/
 
 # Project specific
 .env
+experiments/
 data/
 results/
 *.parquet
@@ -64,4 +65,3 @@ Thumbs.db
 .vscode/
 .idea/
 .cursorrules
-experiments/
