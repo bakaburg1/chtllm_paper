@@ -125,12 +125,13 @@ list(
         left_join(
           questions |> select("item", "item_text", "option_correct"),
           by = "item") |>
-        # Exclude combinations in which a reasoning prompt is used for a
-        # reasoning model, since it's redundant (and openai forbids them)
+        # Add model details
         left_join(
           models |> select("model_id", "model_type"),
           by = "model_id"
         ) |>
+        # Exclude combinations in which a reasoning prompt is used for a
+        # reasoning model, since it's redundant (and openai forbids them)
         filter(
           !(.data$modality == "reasoning" & .data$model_type == "reasoning")) |>
         select(-"model_type")
