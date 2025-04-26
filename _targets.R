@@ -180,6 +180,8 @@ list(
       model_config$system_prompt <- generate_system_prompt(
         combinations$modality)
 
+      options(ellmer_timeout_s = 120)
+
       cli::cli_inform(
         paste(
           "Running item: {combinations$item}, {combinations$model_id}, {combinations$modality}, repl. {combinations$replication}")
