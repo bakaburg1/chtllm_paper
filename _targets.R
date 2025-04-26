@@ -1,15 +1,12 @@
 # Load packages required to define the pipeline:
 library(targets)
-library(tarchetypes)
 
+# Packages whose functions are probably not namespaced
 pkgs <- c(
-  "crew",
   "dplyr",
-  "rlang",
-  "ggplot2"
+  "ggplot2",
+  "rlang"
 )
-
-pak::pak(pkgs)
 
 tar_option_set(
   workspace_on_error = TRUE,
