@@ -162,7 +162,7 @@ list(
 
       if (nrow(to_test) == 0) stop(
         "All combinations were already processed.",
-        call. = F)
+        call. = FALSE)
 
       to_test
     },
