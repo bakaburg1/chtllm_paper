@@ -266,10 +266,6 @@ query_llm <- function(
         list(input = NA_integer_, output = NA_integer_)
       })
 
-      if (interactive()) {
-        cat("Answer:", answer, "\n")
-      }
-
     } else {
 
       answer <- as.character(error)
