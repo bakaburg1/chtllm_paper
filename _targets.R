@@ -161,15 +161,16 @@ list(
       # Filter in unprocessed combinations
       to_test <- all_combinations[!prospective_files %in% existing_files, ]
 
-      if (nrow(to_test) == 0)
-        stop(
-          "All combinations were already processed.",
-          call. = FALSE
-        )
-
-      to_test
-    },
-    error = "abridge"
+      # If no combinations left, return a minimal placeholder tibble
+      # This avoids pipeline errors on empty target outputs
+      if (nrow(to_test) == 0) {
+        cli::cli_alert_info("No new combinations to process.")
+        tibble::tibble(.is_placeholder = TRUE)
+      } else {
+        # Return the actual combinations to test (without placeholder flag)
+        to_test
+      }
+    }
   ),
 
   # LLM Querying ----------
@@ -178,6 +179,15 @@ list(
   tar_target(
     processed_files,
     {
+      # Skip placeholder branch without doing work
+      if (".is_placeholder" %in% names(combinations)) {
+        dummy_file <- file.path(processed_dir, ".__placeholder_skip__")
+        if (!file.exists(dummy_file)) {
+          dir.create(dirname(dummy_file), showWarnings = FALSE, recursive = TRUE)
+          file.create(dummy_file)
+        }
+        return(dummy_file)
+      }
       question <- get_formatted_question(combinations$item, questions)
       model_config <- get_model_config(combinations$model_id)
       model_config$system_prompt <- generate_system_prompt(
