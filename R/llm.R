@@ -69,20 +69,18 @@ parse_answer_with_llm <- function(response) {
   parser_config <- get_model_config(parser_model_id)
 
   # Create the parsing prompt
-  parser_config$system_prompt <- paste(
-    "You are an AI assistant that extracts multiple choice answers from text.",
-    "The text will be an answer to a multiple choice question (A, B, C, or D).",
-    "The correct answer is usually stated or implied at the end of the text.",
-    "You must ONLY respond with the letter of the answer you identified",
-    "in the format _X_ where X is A, B, C, or D.",
-    "If you cannot confidently identify the answer, respond with _NONE_.",
-    "Also answer _NONE_ if the reply seems incomplete.",
-    "Do not provide ANY additional text or explanation."
-  )
+  parser_config$system_prompt <- "You are an AI assistant that examines the
+  answers to a medicine closed-question test with only 4 options (A, B, C,
+  or D). Your task is to extract the provided answer into a structured,
+  parsable format. The format is the letter of the answer sorrounded by
+  underscores, i.e., one of _A_, _B_, _C_, or _D_. You must not output any
+  other text or explanation apart from the structured answer. If you cannot
+  confidently identify the answer, respond only with _NONE_. Also answer
+  _NONE_ if the reply seems incomplete." |> trimws()
 
   # Create a simple question format
   question <- paste(
-    "Extract the intended answer (A, B, C, or D) from this text:",
+    "Extract the intended answer (_A_, _B_, _C_, or _D_) from this text:\n",
     response
   )
 
