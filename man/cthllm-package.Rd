@@ -11,7 +11,12 @@ travel health questions. It provides a framework to test different LLMs with
 various answering modalities and assess their performance.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com}
+\strong{Maintainer}: Angelo D'Ambrosio \email{angelo.dambrosio@ecdc.europa.eu}
+
+Other contributors:
+\itemize{
+  \item Francesco Baglivo \email{francesco.baglivo@phd.unipi.it} [contributor]
+}
 
 }
 \keyword{internal}

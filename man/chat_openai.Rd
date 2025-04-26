@@ -17,6 +17,23 @@ chat_openai(
   echo = FALSE
 )
 }
+\arguments{
+\item{system_prompt}{Character string for the system prompt.}
+
+\item{turns}{A list of Turn objects representing the conversation history.}
+
+\item{base_url}{The base URL for the OpenAI API.}
+
+\item{api_key}{The API key for authentication.}
+
+\item{model}{The specific model ID to use.}
+
+\item{seed}{An integer seed for reproducibility.}
+
+\item{api_args}{A list of additional arguments to pass to the API.}
+
+\item{echo}{Logical; whether to echo the input prompts in the output.}
+}
 \description{
 Reimplementation of ellmer::chat_openai to support system messages with
 o1-mini and ignore unsupported parameters (e.g. temperature) in all o-series

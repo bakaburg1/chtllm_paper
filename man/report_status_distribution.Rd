@@ -4,16 +4,22 @@
 \alias{report_status_distribution}
 \title{Report status distribution of temporary results}
 \usage{
-report_status_distribution(temp_results_dir = here::here("results", "temp"))
+report_status_distribution(
+  type = c("processed", "processing"),
+  results_dir = here::here("results")
+)
 }
 \arguments{
-\item{temp_results_dir}{The directory containing temporary results.}
+\item{type}{The type of results to analyze, either "processed" or
+"processing".}
+
+\item{results_dir}{The base directory containing results subdirectories.}
 }
 \value{
 A named integer vector with counts for each status.
 }
 \description{
-Analyzes the distribution of result statuses in the temporary results directory.
+Analyzes the distribution of result statuses from temporary result files.
 Status codes are:
 \itemize{
 \item C: Correct answer

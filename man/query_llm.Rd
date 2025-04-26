@@ -10,9 +10,6 @@ query_llm(message, model_config)
 \item{message}{The message to send to the LLM.}
 
 \item{model_config}{List containing model configuration.}
-
-\item{modality}{Character string indicating the modality ("cold", "free", or
-"reasoning").}
 }
 \value{
 A list containing the response content and metadata about the call.

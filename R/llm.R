@@ -145,8 +145,6 @@ extract_answer <- function(response) {
 #'
 #' @param message The message to send to the LLM.
 #' @param model_config List containing model configuration.
-#' @param modality Character string indicating the modality ("cold", "free", or
-#'   "reasoning").
 #'
 #' @return A list containing the response content and metadata about the call.
 #'
@@ -280,7 +278,7 @@ query_llm <- function(
       cli::cli_alert_danger("Failed with error:\n{answer}")
 
       if (retry_iter <= 5) {
-        wait <- exp(max(rnorm(1, retry_iter, .05), 1))
+        wait <- exp(max(stats::rnorm(1, retry_iter, .05), 1))
         cli::cli_alert_warning("Retrying in {round(wait, 2)} seconds")
         retry_iter <- retry_iter + 1
         Sys.sleep(wait)
@@ -319,32 +317,19 @@ query_llm <- function(
     invisible()
 }
 
-# Was added in ellmer 0.1.1
-# chat_openrouter <- function(
-#     system_prompt = NULL,
-#     turns = NULL,
-#     base_url = "https://openrouter.ai/api/v1",
-#     api_key = get_api_key("openrouter"),
-#     model = NULL,
-#     seed = NULL,
-#     api_args = list(),
-#     echo = FALSE
-# ) {
-#   ellmer::chat_openai(
-#     system_prompt = system_prompt,
-#     turns = turns,
-#     base_url = base_url,
-#     api_key = api_key,
-#     model = model,
-#     seed = seed,
-#     api_args = api_args,
-#     echo = FALSE # By purpose, another value will raise an error
-#   )
-# }
 
 #' Reimplementation of ellmer::chat_openai to support system messages with
 #' o1-mini and ignore unsupported parameters (e.g. temperature) in all o-series
 #' models
+#'
+#' @param system_prompt Character string for the system prompt.
+#' @param turns A list of Turn objects representing the conversation history.
+#' @param base_url The base URL for the OpenAI API.
+#' @param api_key The API key for authentication.
+#' @param model The specific model ID to use.
+#' @param seed An integer seed for reproducibility.
+#' @param api_args A list of additional arguments to pass to the API.
+#' @param echo Logical; whether to echo the input prompts in the output.
 chat_openai <- function(
   system_prompt = NULL,
   turns = NULL,

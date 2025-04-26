@@ -14,6 +14,8 @@ compile_results_data(
 \item{dir}{Directory containing temp files.}
 
 \item{enrich}{Whether to enrich the results with model configuration}
+
+\item{models_path}{Path to the models CSV file used for enrichment.}
 }
 \value{
 If as = "data.frame", returns a tibble containing all results

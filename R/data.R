@@ -394,6 +394,7 @@ validate_results <- function(results) {
 #'
 #' @param dir Directory containing temp files.
 #' @param enrich Whether to enrich the results with model configuration
+#' @param models_path Path to the models CSV file used for enrichment.
 #'
 #' @return If as = "data.frame", returns a tibble containing all results
 #'   combined. If as = "list", returns a list of tibbles, one per file.
