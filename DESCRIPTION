@@ -1,16 +1,15 @@
 Package: cthllm
 Title: Evaluate LLM Performance on Clinical Travel Health Questions
 Version: 1.0.0
-Author: Angelo D'Ambrosio <angelo.dambrosio@ecdc.europa.eu> [aut, cre]
-Maintainer: Angelo D'Ambrosio <angelo.dambrosio@ecdc.europa.eu>
 Authors@R: c(
-    person("Angelo", "D'Ambrosio", email = "angelo.dambrosio@ecdc.europa.eu", role = c("aut", "cre")),
-    person("Francesco", "Baglivo", email = "francesco.baglivo@phd.unipi.it", role = "ctb")
+    person("Angelo", "D'Ambrosio", email = "angelo.dambrosio@ecdc.europa.eu", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-2045-5155")),
+    person("Francesco", "Baglivo", email = "francesco.baglivo@phd.unipi.it", role = "ctb"),
+    person("Luigi", "De Angelis", email = "luigi.deangelis@phd.unipi.it", role = "ctb")
     )
 Description: A package to evaluate Large Language Models (LLMs) performance on
     clinical travel health questions. It provides a framework to test different
     LLMs with various answering modalities and assess their performance.
-License: EUPL-1.2
+License: EUPL (>= 1.2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
