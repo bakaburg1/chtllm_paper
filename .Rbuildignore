@@ -3,3 +3,11 @@
 ^LICENSE\.md$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^_targets$
+^_targets\.R$
+^experiments$
+^outputs$
+^results$
+^.cursorignore$
+^.cursorrules$
+^.env$
