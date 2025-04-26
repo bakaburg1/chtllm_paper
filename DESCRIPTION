@@ -13,6 +13,8 @@ License: EUPL (>= 1.2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.4.0)
 Imports:
     ellmer (>= 0.1.1),
     dplyr (>= 1.1.4),
@@ -35,4 +37,9 @@ Suggests:
     rmarkdown (>= 2.29),
     here (>= 1.0.1),
     mockery (>= 0.4.4),
-    parallel (>= 4.4.3)
+    parallel (>= 4.4.3),
+    cmdstanr (>= 0.9.0),
+    brms (>= 2.22.0)
+Additional_repositories:
+    https://mc-stan.org/r-packages/
+SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)

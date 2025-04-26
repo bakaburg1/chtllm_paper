@@ -11,11 +11,12 @@ travel health questions. It provides a framework to test different LLMs with
 various answering modalities and assess their performance.
 }
 \author{
-\strong{Maintainer}: Angelo D'Ambrosio \email{angelo.dambrosio@ecdc.europa.eu}
+\strong{Maintainer}: Angelo D'Ambrosio \email{angelo.dambrosio@ecdc.europa.eu} (\href{https://orcid.org/0000-0002-2045-5155}{ORCID})
 
 Other contributors:
 \itemize{
   \item Francesco Baglivo \email{francesco.baglivo@phd.unipi.it} [contributor]
+  \item Luigi De Angelis \email{luigi.deangelis@phd.unipi.it} [contributor]
 }
 
 }
