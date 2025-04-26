@@ -271,7 +271,11 @@ list(
     {
       processed_files; # add dependency
 
-      report_status_distribution() |> print()
+      cat("Status distribution for processing results:\n")
+      report_status_distribution(type = "processing") |> print()
+
+      cat("Status distribution for processed results:\n")
+      report_status_distribution(type = "processed") |> print()
 
       compile_results_data(dir = processed_dir)
 

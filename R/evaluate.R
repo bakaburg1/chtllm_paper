@@ -1,23 +1,32 @@
 #' Report status distribution of temporary results
 #'
-#' Analyzes the distribution of result statuses in the temporary results directory.
+#' Analyzes the distribution of result statuses from temporary result files.
 #' Status codes are:
 #' - C: Correct answer
 #' - F: Failed/incorrect answer
 #' - E: Error occurred
 #' - N: No valid answer extracted
 #'
-#' @param temp_results_dir The directory containing temporary results.
+#' @param type The type of results to analyze, either "processed" or
+#'   "processing".
+#' @param results_dir The base directory containing results subdirectories.
 #'
 #' @return A named integer vector with counts for each status.
 #'
 #' @export
 report_status_distribution <- function(
-  temp_results_dir = here::here("results", "temp")
+  type = c("processed", "processing"),
+  results_dir = here::here("results")
 ) {
+
+  type <- match.arg(type)
+
+  # Get the directory of the files to process
+  files_dir <- file.path(results_dir, type)
+
   # Get all temp result files
   files <- list.files(
-    temp_results_dir,
+    files_dir,
     pattern = "^[A-Z]\\..+\\.csv$"
   )
 
