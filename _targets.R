@@ -6,19 +6,18 @@ pkgs <- c(
   "crew",
   "dplyr",
   "rlang",
-  "ggplot2")
+  "ggplot2"
+)
 
 pak::pak(pkgs)
 
 tar_option_set(
   workspace_on_error = TRUE,
-  packages = pkgs
-
+  packages = pkgs,
   # Parallel processing
-  , controller = crew::crew_controller_local(workers = parallel::detectCores())
-
-  , error = "null" # Keep going even if error. We will review all errors later
-  , debug = NULL # put here targets to investigate, as a string or vector
+  controller = crew::crew_controller_local(workers = parallel::detectCores()),
+  error = "null", # Keep going even if error. We will review all errors later
+  debug = NULL # put here targets to investigate, as a string or vector
 )
 
 # Load functions
@@ -31,7 +30,7 @@ list(
   # Replications
   tar_target(
     n_replications,
-    5L  # Number of times each combination should be tested
+    5L # Number of times each combination should be tested
   ),
 
   tar_target(
@@ -78,7 +77,7 @@ list(
   # Define which status to reprocess
   tar_target(
     reprocess_status,
-    c("E")  # E = ERROR
+    c("E") # E = ERROR
   ),
 
   # Define which questions to process, 1:42 is all of them
@@ -124,7 +123,8 @@ list(
         # Add question details
         left_join(
           questions |> select("item", "item_text", "option_correct"),
-          by = "item") |>
+          by = "item"
+        ) |>
         # Add model details
         left_join(
           models |> select("model_id", "model_type"),
@@ -133,9 +133,9 @@ list(
         # Exclude combinations in which a reasoning prompt is used for a
         # reasoning model, since it's redundant (and openai forbids them)
         filter(
-          !(.data$modality == "reasoning" & .data$model_type == "reasoning")) |>
+          !(.data$modality == "reasoning" & .data$model_type == "reasoning")
+        ) |>
         select(-"model_type")
-
 
       # Get list of existing result files
       existing_files <- list.files(
@@ -161,9 +161,11 @@ list(
       # Filter in unprocessed combinations
       to_test <- all_combinations[!prospective_files %in% existing_files, ]
 
-      if (nrow(to_test) == 0) stop(
-        "All combinations were already processed.",
-        call. = FALSE)
+      if (nrow(to_test) == 0)
+        stop(
+          "All combinations were already processed.",
+          call. = FALSE
+        )
 
       to_test
     },
@@ -179,14 +181,17 @@ list(
       question <- get_formatted_question(combinations$item, questions)
       model_config <- get_model_config(combinations$model_id)
       model_config$system_prompt <- generate_system_prompt(
-        combinations$modality)
+        combinations$modality
+      )
 
       options(ellmer_timeout_s = 120)
 
       cli::cli_inform(
         paste(
-          "Running item: {combinations$item}, {combinations$model_id}, {combinations$modality}, repl. {combinations$replication}")
+          "Running item: {combinations$item}, {combinations$model_id},",
+          "{combinations$modality}, repl. {combinations$replication}"
         )
+      )
 
       # Set some parameters for all models
       model_config$temperature <- temperature
@@ -194,7 +199,8 @@ list(
       str(model_config)
 
       # Create a temp file to track what combination is being processed
-      temp_file <- combinations[1,] |> mutate(status = "T") |>
+      temp_file <- combinations[1, ] |>
+        mutate(status = "T") |>
         generate_temp_filename()
 
       readr::write_csv(
@@ -207,25 +213,30 @@ list(
       })
 
       # Try to get LLM response
-      response <- tryCatch({
-        query_llm(
-          message = question,
-          model_config = model_config
-        )
-      }, error = function(e) {
-        # Return error message plus metadata
-        list(
-          answer = sprintf(
-            "ERROR: %s", stringr::str_replace_all(e$message, "[\n\r]", " ")),
-          metadata = list(
-            timestamp = Sys.time(),
-            generation_time = NA_real_,
-            input_tokens = NA_integer_,
-            output_tokens = NA_integer_,
-            total_tokens = NA_integer_
+      response <- tryCatch(
+        {
+          query_llm(
+            message = question,
+            model_config = model_config
           )
-        )
-      })
+        },
+        error = function(e) {
+          # Return error message plus metadata
+          list(
+            answer = sprintf(
+              "ERROR: %s",
+              stringr::str_replace_all(e$message, "[\n\r]", " ")
+            ),
+            metadata = list(
+              timestamp = Sys.time(),
+              generation_time = NA_real_,
+              input_tokens = NA_integer_,
+              output_tokens = NA_integer_,
+              total_tokens = NA_integer_
+            )
+          )
+        }
+      )
 
       # Process response and determine status
       processed <- extract_answer(response$answer)
@@ -250,7 +261,8 @@ list(
       list.files(
         processed_dir,
         pattern = paste0("\\.", prospective_file_name),
-        full.names = TRUE) |>
+        full.names = TRUE
+      ) |>
         file.remove()
 
       if (status %in% reprocess_status) {
@@ -270,7 +282,7 @@ list(
   tar_target(
     results,
     {
-      processed_files; # add dependency
+      processed_files # add dependency
 
       cat("Status distribution for processing results:\n")
       report_status_distribution(type = "processing") |> print()
@@ -279,7 +291,6 @@ list(
       report_status_distribution(type = "processed") |> print()
 
       compile_results_data(dir = processed_dir)
-
     }
   ),
 

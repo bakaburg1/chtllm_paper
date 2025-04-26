@@ -7,9 +7,8 @@
 #'
 #' @export
 generate_system_prompt <- function(
-    modality = c("cold", "free", "reasoning")
+  modality = c("cold", "free", "reasoning")
 ) {
-
   modality <- match.arg(modality)
   common_prompt <- "You are an AI expert in medical travel health answering multiple choice questions."
 
@@ -58,7 +57,6 @@ generate_system_prompt <- function(
 #'
 #' @keywords internal
 parse_answer_with_llm <- function(response) {
-
   # Get parser model config from environment
   parser_model_id <- get_env_var("PARSER_MODEL_ID")
   if (identical(parser_model_id, "")) {
@@ -76,7 +74,8 @@ parse_answer_with_llm <- function(response) {
   underscores, i.e., one of _A_, _B_, _C_, or _D_. You must not output any
   other text or explanation apart from the structured answer. If you cannot
   confidently identify the answer, respond only with _NONE_. Also answer
-  _NONE_ if the reply seems incomplete." |> trimws()
+  _NONE_ if the reply seems incomplete." |>
+    trimws()
 
   # Create a simple question format
   question <- paste(
@@ -106,7 +105,6 @@ parse_answer_with_llm <- function(response) {
 #'
 #' @export
 extract_answer <- function(response) {
-
   if (grepl("ERROR|^Error", response)) {
     return("ERROR")
   }
@@ -141,7 +139,6 @@ extract_answer <- function(response) {
   parsed_answer <- paste0(parsed_answer, "*")
 
   return(parsed_answer)
-
 }
 
 #' Query an LLM with a message
@@ -155,20 +152,21 @@ extract_answer <- function(response) {
 #'
 #' @export
 query_llm <- function(
-    message,
-    model_config
+  message,
+  model_config
 ) {
   # If model_config is a string, treat it as a model_id and load the config
   if (is.character(model_config) && length(model_config) == 1) {
-    model_id <- model_config  # Store the original model_id
+    model_id <- model_config # Store the original model_id
     model_config <- get_model_config(model_config)
-    model_config$model_id <- model_id  # Add back model_id as character
+    model_config$model_id <- model_id # Add back model_id as character
   }
 
   # Add API key
   if (rlang::is_empty(model_config$api_key)) {
-    model_config$api_key  <- get_api_key(
-      model_config$provider)
+    model_config$api_key <- get_api_key(
+      model_config$provider
+    )
   }
 
   # Build the chat function name from provider
@@ -176,9 +174,11 @@ query_llm <- function(
 
   # Get the function if overwritten in the package otherwise from ellmer
   chat_fn <- tryCatch(
-    get(chat_fn_str), error = \(e) {
+    get(chat_fn_str),
+    error = \(e) {
       get(chat_fn_str, envir = asNamespace("ellmer"))
-    })
+    }
+  )
 
   # Get function arguments
   fn_args <- names(formals(chat_fn))
@@ -190,8 +190,10 @@ query_llm <- function(
   # Assign remaining parameters to model_params
   model_params <- model_config[!names(model_config) %in% names(base_params)]
 
-  if (model_config$model_type == "reasoning" &&
-      model_config$provider == "openrouter") {
+  if (
+    model_config$model_type == "reasoning" &&
+      model_config$provider == "openrouter"
+  ) {
     model_params$include_reasoning <- TRUE
   }
 
@@ -204,7 +206,6 @@ query_llm <- function(
   retry_iter <- 1
 
   while (retry) {
-
     retry <- FALSE
 
     print(model_config$model)
@@ -221,17 +222,19 @@ query_llm <- function(
     error <- try(response <- chat$chat(message), silent = TRUE)
 
     if (!inherits(error, "try-error")) {
-
       # Check errors
       http_resp <- httr2::last_response()
       if (http_resp |> httr2::resp_is_error()) {
-
         http_resp |> httr2::resp_body_string() |> rlang::inform()
         error <- http_resp |> httr2::resp_body_json() |> purrr::pluck(1)
 
-        if (error$code %in% c(
-          "unknown_parameter",
-          "unsupported_parameter")) {
+        if (
+          error$code %in%
+            c(
+              "unknown_parameter",
+              "unsupported_parameter"
+            )
+        ) {
           retry <- TRUE
           model_params[error$param] <- NULL
         }
@@ -256,18 +259,19 @@ query_llm <- function(
       }
 
       # Get token counts for this call
-      token_counts <- tryCatch({
-        tokens_matrix <- chat$tokens()
+      token_counts <- tryCatch(
+        {
+          tokens_matrix <- chat$tokens()
 
-        # Get the last row which contains the current call's tokens
-        last_row <- tokens_matrix[nrow(tokens_matrix), ]
-        list(input = last_row["input"], output = last_row["output"])
-      }, error = function(e) {
-        list(input = NA_integer_, output = NA_integer_)
-      })
-
+          # Get the last row which contains the current call's tokens
+          last_row <- tokens_matrix[nrow(tokens_matrix), ]
+          list(input = last_row["input"], output = last_row["output"])
+        },
+        error = function(e) {
+          list(input = NA_integer_, output = NA_integer_)
+        }
+      )
     } else {
-
       answer <- as.character(error)
       token_counts <- list(input = NA, output = NA)
       generation_time <- NA
@@ -304,7 +308,8 @@ query_llm <- function(
       model_id = model_config$model_id,
       provider = model_config$provider,
       model_name = model_config$model_name
-    ) |> c(model_params),
+    ) |>
+      c(model_params),
 
     # Original inputs
     inputs = list(
@@ -337,26 +342,24 @@ query_llm <- function(
 #   )
 # }
 
-
 #' Reimplementation of ellmer::chat_openai to support system messages with
 #' o1-mini and ignore unsupported parameters (e.g. temperature) in all o-series
 #' models
 chat_openai <- function(
-    system_prompt = NULL,
-    turns = NULL,
-    base_url = "https://api.openai.com/v1",
-    api_key = get_api_key("openai"),
-    model = NULL,
-    seed = NULL,
-    api_args = list(),
-    echo = FALSE
+  system_prompt = NULL,
+  turns = NULL,
+  base_url = "https://api.openai.com/v1",
+  api_key = get_api_key("openai"),
+  model = NULL,
+  seed = NULL,
+  api_args = list(),
+  echo = FALSE
 ) {
-
   if (grepl("^o1-mini", model) && !is.null(system_prompt)) {
     turns <- list(ellmer::Turn(
       role = "user",
-      contents = list(ellmer::ContentText(system_prompt)))
-    )
+      contents = list(ellmer::ContentText(system_prompt))
+    ))
     system_prompt <- NULL
   }
 
@@ -370,7 +373,13 @@ chat_openai <- function(
   }
 
   ellmer::chat_openai(
-    system_prompt = system_prompt, turns = turns, base_url = base_url,
-    api_key = api_key, model = model, seed = seed, api_args = api_args,
-    echo = echo)
+    system_prompt = system_prompt,
+    turns = turns,
+    base_url = base_url,
+    api_key = api_key,
+    model = model,
+    seed = seed,
+    api_args = api_args,
+    echo = echo
+  )
 }

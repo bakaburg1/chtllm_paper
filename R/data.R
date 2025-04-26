@@ -6,7 +6,7 @@
 #'
 #' @export
 load_questions <- function(
-    path = here::here("inst", "benchmark_travel_medicine.csv")
+  path = here::here("inst", "benchmark_travel_medicine.csv")
 ) {
   readr::read_csv(path, show_col_types = FALSE) |>
     mutate_all(as.character) |>
@@ -22,7 +22,7 @@ load_questions <- function(
 #'
 #' @export
 load_models <- function(
-    path = here::here("inst", "models.csv")
+  path = here::here("inst", "models.csv")
 ) {
   readr::read_csv(path, show_col_types = FALSE) |>
     validate_models()
@@ -60,8 +60,8 @@ format_question <- function(item_text, options) {
 #'
 #' @export
 get_formatted_question <- function(
-    item,
-    questions = load_questions()
+  item,
+  questions = load_questions()
 ) {
   # Extract the question row
   question <- if (is.numeric(item)) {
@@ -233,7 +233,7 @@ validate_models <- function(models) {
 #'
 #' @export
 load_results <- function(
-    path = here::here("results", "all_results.csv")
+  path = here::here("results", "all_results.csv")
 ) {
   # Check if file exists
   if (!file.exists(path)) {
@@ -275,8 +275,8 @@ load_results <- function(
 #'
 #' @export
 store_result <- function(
-    result_combination,
-    path = here::here("results", "results.csv")
+  result_combination,
+  path = here::here("results", "results.csv")
 ) {
   # Convert input to tibble if it isn't already
   result_row <- tibble::as_tibble(result_combination)
@@ -382,7 +382,8 @@ validate_results <- function(results) {
   if (nrow(invalid_answers) > 0) {
     cli::cli_abort(c(
       "Invalid answers found (must be A/B/C/D or NONE/ERROR):",
-      "Rows:", invalid_answers$item
+      "Rows:",
+      invalid_answers$item
     ))
   }
 
@@ -399,11 +400,10 @@ validate_results <- function(results) {
 #'
 #' @export
 compile_results_data <- function(
-    dir = here::here("results", "processed"),
-    enrich = TRUE,
-    models_path = here::here("inst", "models.csv")
+  dir = here::here("results", "processed"),
+  enrich = TRUE,
+  models_path = here::here("inst", "models.csv")
 ) {
-
   # If directory doesn't exist, return empty result
   if (!dir.exists(dir)) {
     return(tibble::tibble(
@@ -426,14 +426,18 @@ compile_results_data <- function(
 
   # List all CSV files
   files <- list.files(
-    dir, pattern = "^[CFNE]\\..+\\.csv$", full.names = TRUE)
+    dir,
+    pattern = "^[CFNE]\\..+\\.csv$",
+    full.names = TRUE
+  )
 
   # Read all files
   #mirai::daemons(parallel::detectCores() - 1)
   #on.exit(mirai::daemons(0))
   #processor <- mirai::mirai_map(
   results <- purrr::map(
-    files, \(f) {
+    files,
+    \(f) {
       data <- readr::read_csv(f, show_col_types = FALSE, progress = FALSE)
 
       if (nrow(data) == 0) {
@@ -451,7 +455,8 @@ compile_results_data <- function(
           item_text = NA,
           option_correct = NA,
           raw_response = "File is empty",
-          answer = NA, status = "E",
+          answer = NA,
+          status = "E",
           timestamp = NA,
           generation_time = NA,
           input_tokens = NA,
@@ -477,7 +482,6 @@ compile_results_data <- function(
   # results <- processor[mirai::.progress] |>
   #   dplyr::bind_rows()
 
-
   #mirai::daemons(0)
 
   # Enrich results with model configuration if requested
@@ -486,7 +490,6 @@ compile_results_data <- function(
     results <- results |>
       dplyr::left_join(models, by = "model_id")
   }
-
 }
 
 #' Generate temp file name for a result
@@ -506,18 +509,23 @@ compile_results_data <- function(
 #'
 #' @export
 generate_temp_filename <- function(
-    data = NULL,
-    item = NULL,
-    model_id = NULL,
-    modality = NULL,
-    status = NULL,
-    replication = 1L,
-    dir = NULL
+  data = NULL,
+  item = NULL,
+  model_id = NULL,
+  modality = NULL,
+  status = NULL,
+  replication = 1L,
+  dir = NULL
 ) {
   # If data is provided, check required columns and extract vectors
   if (!is.null(data)) {
     required_cols <- c(
-      "item", "model_id", "modality", "status", "replication")
+      "item",
+      "model_id",
+      "modality",
+      "status",
+      "replication"
+    )
     missing_cols <- setdiff(required_cols, names(data))
 
     if (length(missing_cols) > 0) {
@@ -549,7 +557,11 @@ generate_temp_filename <- function(
     dir,
     sprintf(
       "%s.%s_%s_%s_rep%d.csv",
-      status, item, model_id, modality, replication
+      status,
+      item,
+      model_id,
+      modality,
+      replication
     )
   ) |>
     purrr::compact() |>
@@ -567,9 +579,9 @@ generate_temp_filename <- function(
 #'
 #' @export
 store_temp_result <- function(
-    result_combination,
-    status = NULL,
-    dir = here::here("results", "temp")
+  result_combination,
+  status = NULL,
+  dir = here::here("results", "temp")
 ) {
   # Convert input to tibble if it isn't already
   result_row <- tibble::as_tibble(result_combination)

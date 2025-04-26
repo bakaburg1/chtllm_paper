@@ -8,13 +8,13 @@
 #'
 #' @keywords internal
 format_timediff <- function(td, precision = 3) {
-    # Validate input is a difftime object
-    if (!inherits(td, "difftime")) {
-        stop("Input must be a difftime object.")
-    }
+  # Validate input is a difftime object
+  if (!inherits(td, "difftime")) {
+    stop("Input must be a difftime object.")
+  }
 
-    # Format the time difference with specified precision and units
-    paste(signif(unclass(td), precision), units(td))
+  # Format the time difference with specified precision and units
+  paste(signif(unclass(td), precision), units(td))
 }
 
 #' Get model configuration from models.csv
@@ -75,7 +75,9 @@ get_api_key <- function(provider) {
   # Get the key from environment
   key <- get_env_var(env_var)
   if (identical(key, "")) {
-    cli::cli_abort("Can't find env var {.code {env_var}} for provider {.code {provider}}")
+    cli::cli_abort(
+      "Can't find env var {.code {env_var}} for provider {.code {provider}}"
+    )
   }
 
   key
@@ -123,7 +125,8 @@ get_env_var <- function(var_name) {
   value <- Sys.getenv(var_name)
   if (identical(value, "")) {
     cli::cli_abort(
-      "Environment variable {.code {var_name}} not found in .env file")
+      "Environment variable {.code {var_name}} not found in .env file"
+    )
   }
 
   value

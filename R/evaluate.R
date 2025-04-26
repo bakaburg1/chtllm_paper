@@ -18,7 +18,6 @@ report_status_distribution <- function(
   type = c("processed", "processing"),
   results_dir = here::here("results")
 ) {
-
   type <- match.arg(type)
 
   # Get the directory of the files to process
@@ -59,12 +58,11 @@ report_status_distribution <- function(
 #'
 #' @export
 determine_status <- function(extracted_answer, correct_answer) {
-    dplyr::case_when(
-        grepl("ERROR", extracted_answer) ~ "E",
-        is.na(extracted_answer) | extracted_answer == "" ~ "N",
-        grepl("NONE", extracted_answer) ~ "N",
-        grepl(correct_answer, extracted_answer) ~ "C",
-        .default = "F"
-    )
+  dplyr::case_when(
+    grepl("ERROR", extracted_answer) ~ "E",
+    is.na(extracted_answer) | extracted_answer == "" ~ "N",
+    grepl("NONE", extracted_answer) ~ "N",
+    grepl(correct_answer, extracted_answer) ~ "C",
+    .default = "F"
+  )
 }
-
