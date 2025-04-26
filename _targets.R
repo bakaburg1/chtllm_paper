@@ -78,7 +78,7 @@ list(
   # Define which status to reprocess
   tar_target(
     reprocess_status,
-    c("E", "N")  # E = ERROR, N = Not parsable
+    c("E")  # E = ERROR
   ),
 
   tar_target(
