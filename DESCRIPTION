@@ -26,11 +26,11 @@ Imports:
     ggplot2 (>= 3.5.2),
     filelock (>= 1.0.3),
     httr2 (>= 1.1.2),
-    tibble (>= 3.2.1)
+    tibble (>= 3.2.1),
+    crew (>= 1.1.2)
 Config/testthat/edition: 3
 Suggests:
     targets (>= 1.11.1),
-    crew (>= 1.1.0),
     testthat (>= 3.2.3),
     withr (>= 3.0.2),
     knitr (>= 1.50),
@@ -39,7 +39,9 @@ Suggests:
     mockery (>= 0.4.4),
     parallel (>= 4.4.3),
     cmdstanr (>= 0.9.0),
-    brms (>= 2.22.0)
+    brms (>= 2.22.0),
+    tidybayes (>= 3.0.7),
+    forcats (>= 1.0.0)
 Additional_repositories:
     https://mc-stan.org/r-packages/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
