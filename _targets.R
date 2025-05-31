@@ -5,7 +5,13 @@ library(targets)
 pkgs <- c(
   "dplyr",
   "ggplot2",
-  "rlang"
+  "rlang",
+  "stringr",
+  "brms",
+  "cmdstanr",
+  "tidybayes",
+  "forcats",
+  "scales"
 )
 
 tar_option_set(
@@ -19,6 +25,8 @@ tar_option_set(
 
 # Load functions
 tar_source("R")
+
+detected_cores <- parallel::detectCores()
 
 # Pipeline definition
 list(
@@ -180,7 +188,11 @@ list(
       if (".is_placeholder" %in% names(combinations)) {
         dummy_file <- file.path(processed_dir, ".__placeholder_skip__")
         if (!file.exists(dummy_file)) {
-          dir.create(dirname(dummy_file), showWarnings = FALSE, recursive = TRUE)
+          dir.create(
+            dirname(dummy_file),
+            showWarnings = FALSE,
+            recursive = TRUE
+          )
           file.create(dummy_file)
         }
         return(dummy_file)
@@ -309,5 +321,439 @@ list(
       file
     },
     format = "file"
+  ),
+
+  # Bayesian Analysis ----------
+
+  # MCMC configuration parameters
+  tar_target(
+    mcmc_config,
+    {
+      detected_cores <- detected_cores # Edit bas
+      cores <- max(2L, detected_cores)
+      threads <- max(1L, floor(detected_cores / cores))
+
+      list(
+        backend = "cmdstanr",
+        chains = 2L,
+        iter = 5000L,
+        warmup = 1000L,
+        cores = cores,
+        threads = threads,
+        seed = 123
+      )
+    }
+  ),
+
+  # Prepare data for the three models
+  tar_target(
+    data_correctness,
+    prepare_correctness_data(results)
+  ),
+
+  tar_target(
+    data_parsing,
+    prepare_parsing_data(results)
+  ),
+
+  tar_target(
+    data_consistency,
+    prepare_consistency_data(results)
+  ),
+
+  # Fit the three Bayesian models
+  tar_target(
+    fit_correctness,
+    {
+      priors_correctness <- c(
+        brms::prior(normal(0, 1.5), class = "b"),
+        brms::prior(student_t(3, 0, 1.5), class = "sd")
+      )
+
+      file_path <- "models/fit_correctness.rds"
+
+      brms::brm(
+        formula = correct | trials(total) ~
+          0 + (modality | model_id) + (1 | item),
+        family = binomial(),
+        data = data_correctness,
+        prior = priors_correctness,
+        backend = mcmc_config$backend,
+        cores = mcmc_config$cores,
+        chains = mcmc_config$chains,
+        threads = brms::threading(mcmc_config$threads),
+        file = file_path,
+        iter = mcmc_config$iter,
+        warmup = mcmc_config$warmup,
+        seed = mcmc_config$seed
+      )
+
+      file_path
+    },
+    format = "file"
+  ),
+
+  tar_target(
+    fit_parsing,
+    {
+      priors_parsing <- c(
+        brms::prior(normal(0, 1.5), class = "b"),
+        brms::prior(student_t(3, 0, 1.5), class = "sd")
+      )
+
+      file_path <- "models/fit_parsing.rds"
+
+      brms::brm(
+        formula = parse_ord ~ (modality | model_id) + (1 | item),
+        family = cumulative("logit"),
+        data = data_parsing,
+        prior = priors_parsing,
+        backend = mcmc_config$backend,
+        cores = mcmc_config$cores,
+        chains = mcmc_config$chains,
+        threads = brms::threading(mcmc_config$threads),
+        file = file_path,
+        iter = mcmc_config$iter,
+        warmup = mcmc_config$warmup,
+        seed = mcmc_config$seed
+      )
+
+      file_path
+    },
+    format = "file"
+  ),
+
+  tar_target(
+    fit_consistency,
+    {
+      priors_consistency <- c(
+        # Population effects for every non-reference outcome
+        brms::prior(normal(0, 1.5), class = "b", dpar = "muB"),
+        brms::prior(normal(0, 1.5), class = "b", dpar = "muC"),
+        brms::prior(normal(0, 1.5), class = "b", dpar = "muD"),
+        # Random-effect SDs for item intercepts
+        brms::prior(
+          student_t(3, 0, 1.5),
+          class = "sd",
+          group = "item",
+          dpar = "muB"
+        ),
+        brms::prior(
+          student_t(3, 0, 1.5),
+          class = "sd",
+          group = "item",
+          dpar = "muC"
+        ),
+        brms::prior(
+          student_t(3, 0, 1.5),
+          class = "sd",
+          group = "item",
+          dpar = "muD"
+        )
+      )
+
+      file_path <- "models/fit_consistency.rds"
+
+      brms::brm(
+        formula = y | trials(total) ~ 0 + (modality | model_id) + (1 | item),
+        family = multinomial(),
+        data = data_consistency,
+        prior = priors_consistency,
+        backend = mcmc_config$backend,
+        save_pars = brms::save_pars(all = TRUE),
+        cores = mcmc_config$cores,
+        chains = mcmc_config$chains,
+        threads = brms::threading(mcmc_config$threads),
+        file = file_path,
+        iter = mcmc_config$iter,
+        warmup = mcmc_config$warmup,
+        seed = mcmc_config$seed
+      )
+
+      file_path
+    },
+    format = "file"
+  ),
+
+  # Posterior Analysis ----------
+
+  # Extract posterior draws for all models
+  tar_target(
+    draws_correctness,
+    extract_posterior_draws(
+      model = readRDS(fit_correctness),
+      cores = mcmc_config$cores
+    )
+  ),
+
+  tar_target(
+    draws_parsing,
+    extract_posterior_draws(
+      model = readRDS(fit_parsing),
+      cores = mcmc_config$cores
+    )
+  ),
+
+  tar_target(
+    draws_consistency,
+    extract_posterior_draws(
+      model = readRDS(fit_consistency),
+      cores = mcmc_config$cores
+    )
+  ),
+
+  # Marginalized summaries for each model
+  tar_target(
+    summaries_correctness_by_model,
+    compute_marginalized_summaries(
+      draws = draws_correctness,
+      group_vars = "model_id"
+    )
+  ),
+
+  tar_target(
+    summaries_correctness_by_modality,
+    compute_marginalized_summaries(
+      draws = draws_correctness,
+      group_vars = "modality"
+    )
+  ),
+
+  tar_target(
+    summaries_correctness_interaction,
+    compute_marginalized_summaries(
+      draws = draws_correctness,
+      group_vars = c("model_id", "modality")
+    )
+  ),
+
+  tar_target(
+    summaries_parsing_by_model,
+    compute_marginalized_summaries(
+      draws = draws_parsing,
+      group_vars = "model_id"
+    )
+  ),
+
+  tar_target(
+    summaries_parsing_by_modality,
+    compute_marginalized_summaries(
+      draws = draws_parsing,
+      group_vars = "modality"
+    )
+  ),
+
+  tar_target(
+    summaries_parsing_interaction,
+    compute_marginalized_summaries(
+      draws = draws_parsing,
+      group_vars = c("model_id", "modality")
+    )
+  ),
+
+  tar_target(
+    summaries_consistency_by_model,
+    compute_marginalized_summaries(
+      draws = draws_consistency,
+      group_vars = "model_id"
+    )
+  ),
+
+  tar_target(
+    summaries_consistency_by_modality,
+    compute_marginalized_summaries(
+      draws = draws_consistency,
+      group_vars = "modality"
+    )
+  ),
+
+  tar_target(
+    summaries_consistency_interaction,
+    compute_marginalized_summaries(
+      draws = draws_consistency,
+      group_vars = c("model_id", "modality")
+    )
+  ),
+
+  # KL divergence for consistency
+  tar_target(
+    kl_divergence_consistency,
+    calculate_scaled_kl_divergence(draws_consistency)
+  ),
+
+  # # Store summary tables
+  # tar_target(
+  #   correctness_tables_file,
+  #   {
+  #     file_path <- here::here("outputs", "correctness_summaries.rds")
+  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
+  #
+  #     summaries <- list(
+  #       by_model = summaries_correctness_by_model,
+  #       by_modality = summaries_correctness_by_modality,
+  #       interaction = summaries_correctness_interaction
+  #     )
+  #
+  #     saveRDS(summaries, file_path)
+  #     file_path
+  #   },
+  #   format = "file"
+  # ),
+  #
+  # tar_target(
+  #   parsing_tables_file,
+  #   {
+  #     file_path <- here::here("outputs", "parsing_summaries.rds")
+  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
+  #
+  #     summaries <- list(
+  #       by_model = summaries_parsing_by_model,
+  #       by_modality = summaries_parsing_by_modality,
+  #       interaction = summaries_parsing_interaction
+  #     )
+  #
+  #     saveRDS(summaries, file_path)
+  #     file_path
+  #   },
+  #   format = "file"
+  # ),
+  #
+  # tar_target(
+  #   consistency_tables_file,
+  #   {
+  #     file_path <- here::here("outputs", "consistency_summaries.rds")
+  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
+  #
+  #     summaries <- list(
+  #       by_model = summaries_consistency_by_model,
+  #       by_modality = summaries_consistency_by_modality,
+  #       interaction = summaries_consistency_interaction,
+  #       kl_divergence = kl_divergence_consistency
+  #     )
+  #
+  #     saveRDS(summaries, file_path)
+  #     file_path
+  #   },
+  #   format = "file"
+  # ),
+
+  # Generate and store plots
+  tar_target(
+    correctness_plots,
+    create_summary_plots(
+      summaries = summaries_correctness_interaction,
+      metric_name = "correctness",
+      y_transform = scales::percent_format(accuracy = 1),
+      y_label = "Correctness probability"
+    )
+  ),
+
+  tar_target(
+    parsing_plots,
+    create_summary_plots(
+      summaries = summaries_parsing_interaction,
+      metric_name = "parsing quality",
+      y_label = "Parsing quality (ordinal scale)"
+    )
+  ),
+
+  tar_target(
+    consistency_plots,
+    create_summary_plots(
+      summaries = summaries_consistency_interaction,
+      metric_name = "response consistency",
+      y_label = "Response probability"
+    )
+  ),
+
+  tar_target(
+    kl_divergence_plots,
+    create_summary_plots(
+      summaries = kl_divergence_consistency,
+      metric_name = "KL divergence",
+      y_label = "Scaled KL divergence"
+    )
+  ),
+
+  # tar_target(
+  #   correctness_plots_file,
+  #   {
+  #     file_path <- here::here("outputs", "correctness_plots.rds")
+  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
+  #     saveRDS(correctness_plots, file_path)
+  #     file_path
+  #   },
+  #   format = "file"
+  # ),
+  #
+  # tar_target(
+  #   parsing_plots_file,
+  #   {
+  #     file_path <- here::here("outputs", "parsing_plots.rds")
+  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
+  #     saveRDS(parsing_plots, file_path)
+  #     file_path
+  #   },
+  #   format = "file"
+  # ),
+  #
+  # tar_target(
+  #   consistency_plots_file,
+  #   {
+  #     file_path <- here::here("outputs", "consistency_plots.rds")
+  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
+  #     saveRDS(consistency_plots, file_path)
+  #     file_path
+  #   },
+  #   format = "file"
+  # ),
+  #
+  # tar_target(
+  #   kl_plots_file,
+  #   {
+  #     file_path <- here::here("outputs", "kl_divergence_plots.rds")
+  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
+  #     saveRDS(kl_divergence_plots, file_path)
+  #     file_path
+  #   },
+  #   format = "file"
+  # ),
+
+  # Correlation analyses
+  tar_target(
+    correlation_correctness_parsing,
+    compute_model_correlation(
+      model1_draws = draws_correctness,
+      model2_draws = draws_parsing,
+      filter_parsing = TRUE,
+      parsing_data = data_parsing
+    )
+  ),
+
+  tar_target(
+    correlation_correctness_consistency,
+    compute_model_correlation(
+      model1_draws = draws_correctness,
+      model2_draws = draws_consistency,
+      filter_parsing = FALSE
+    )
   )
+
+  # tar_target(
+  #   correlations_file,
+  #   {
+  #     file_path <- here::here("outputs", "model_correlations.rds")
+  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
+  #
+  #     correlations <- list(
+  #       correctness_parsing = correlation_correctness_parsing,
+  #       correctness_consistency = correlation_correctness_consistency,
+  #       parsing_consistency = correlation_parsing_consistency
+  #     )
+  #
+  #     saveRDS(correlations, file_path)
+  #     file_path
+  #   },
+  #   format = "file"
+  # )
 )
