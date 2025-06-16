@@ -57,6 +57,7 @@ results/
 *.qs
 _targets/
 models/
+logs/
 
 # OS specific
 .DS_Store

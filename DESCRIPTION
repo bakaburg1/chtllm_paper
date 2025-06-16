@@ -16,7 +16,7 @@ RoxygenNote: 7.3.2
 Depends:
     R (>= 4.4.0)
 Imports:
-    ellmer (>= 0.1.1),
+    ellmer (>= 0.2.0),
     dplyr (>= 1.1.4),
     stringr (>= 1.5.1),
     purrr (>= 1.0.4),
