@@ -131,3 +131,57 @@ get_env_var <- function(var_name) {
 
   value
 }
+
+#' Sequence Generation from Vector Range
+#'
+#' Extends seq() to automatically compute from and to from the vector range
+#' values. This function takes a vector, finds its range (min and max), and
+#' generates a sequence between those values.
+#'
+#' @param x A numeric vector from which to extract the range.
+#' @param by Number: increment of the sequence. If NULL, defaults to 1 for
+#'   integer sequences.
+#' @param length.out Desired length of the sequence. A non-negative number,
+#'   which for seq() will be rounded up if fractional.
+#' @param along.with Take the length from the length of this argument.
+#' @param ... Further arguments passed to seq().
+#'
+#' @return A numeric vector containing the sequence from min(x) to max(x).
+#'
+#' @examples
+#' \dontrun{
+#' # Basic usage with by parameter
+#' seq_range(c(1, 10), by = 1)
+#'
+#' # Using length.out instead of by
+#' seq_range(c(0, 100), length.out = 11)
+#'
+#' # Works with unordered input
+#' seq_range(c(10, 1, 5, 3), by = 2)
+#' }
+#'
+#' @keywords internal
+seq_range <- function(
+  x,
+  by = NULL,
+  length.out = NULL,
+  along.with = NULL,
+  ...
+) {
+  x <- range(x)
+  from <- x[1]
+  to <- x[2]
+
+  # Build arguments list, excluding NULL values
+  args <- list(from = from, to = to)
+
+  if (!is.null(by)) args$by <- by
+  if (!is.null(length.out)) args$length.out <- length.out
+  if (!is.null(along.with)) args$along.with <- along.with
+
+  # Add any additional arguments from ...
+  extra_args <- list(...)
+  args <- c(args, extra_args)
+
+  do.call(seq, args)
+}
