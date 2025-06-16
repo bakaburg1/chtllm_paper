@@ -7,7 +7,7 @@
 #'
 #' @export
 generate_system_prompt <- function(
-  modality = c("cold", "free", "reasoning")
+    modality = c("cold", "free", "reasoning")
 ) {
   modality <- match.arg(modality)
   common_prompt <- "You are an AI expert in medical travel health answering multiple choice questions."
@@ -150,8 +150,8 @@ extract_answer <- function(response) {
 #'
 #' @export
 query_llm <- function(
-  message,
-  model_config
+    message,
+    model_config
 ) {
   # If model_config is a string, treat it as a model_id and load the config
   if (is.character(model_config) && length(model_config) == 1) {
@@ -190,15 +190,38 @@ query_llm <- function(
 
   if (
     model_config$model_type == "reasoning" &&
-      model_config$provider == "openrouter"
+    model_config$provider == "openrouter"
   ) {
     model_params$include_reasoning <- TRUE
+  }
+
+  # Move temperature to api_args if it exists
+  if ("temperature" %in% names(model_params)) {
+    if (is.null(base_params$api_args)) {
+      base_params$api_args <- list()
+    }
+    base_params$api_args$temperature <- model_params$temperature
+    model_params$temperature <- NULL
   }
 
   # Remove model parameters that are not needed for the API call
   model_params$provider <- NULL
   model_params$model_type <- NULL
   model_params$active <- NULL
+  model_params$cost_per_mln <- NULL
+  model_params$model_id <- NULL
+
+  if (
+    model_config$provider == "openai" &&
+    grepl("^o\\d-", model_config$model)) {
+
+    # OpenAI o-series models don't support temperature different from 1
+    if (!is.null(base_params$api_args)) {
+      base_params$api_args$temperature <- 1
+    } else {
+      model_params$temperature <- 1
+    }
+  }
 
   retry <- TRUE
   retry_iter <- 1
@@ -208,7 +231,12 @@ query_llm <- function(
 
     print(model_config$model)
 
-    join_params <- c(base_params, list(api_args = model_params))
+    # Only add params if model_params is not empty
+    if (length(model_params) > 0) {
+      join_params <- c(base_params, list(params = model_params))
+    } else {
+      join_params <- base_params
+    }
 
     # Create the chat object
     chat <- do.call(chat_fn, join_params)
@@ -228,10 +256,10 @@ query_llm <- function(
 
         if (
           error$code %in%
-            c(
-              "unknown_parameter",
-              "unsupported_parameter"
-            )
+          c(
+            "unknown_parameter",
+            "unsupported_parameter"
+          )
         ) {
           retry <- TRUE
           model_params[error$param] <- NULL
@@ -315,56 +343,4 @@ query_llm <- function(
     )
   ) |>
     invisible()
-}
-
-
-#' Reimplementation of ellmer::chat_openai to support system messages with
-#' o1-mini and ignore unsupported parameters (e.g. temperature) in all o-series
-#' models
-#'
-#' @param system_prompt Character string for the system prompt.
-#' @param turns A list of Turn objects representing the conversation history.
-#' @param base_url The base URL for the OpenAI API.
-#' @param api_key The API key for authentication.
-#' @param model The specific model ID to use.
-#' @param seed An integer seed for reproducibility.
-#' @param api_args A list of additional arguments to pass to the API.
-#' @param echo Logical; whether to echo the input prompts in the output.
-chat_openai <- function(
-  system_prompt = NULL,
-  turns = NULL,
-  base_url = "https://api.openai.com/v1",
-  api_key = get_api_key("openai"),
-  model = NULL,
-  seed = NULL,
-  api_args = list(),
-  echo = FALSE
-) {
-  if (grepl("^o1-mini", model) && !is.null(system_prompt)) {
-    turns <- list(ellmer::Turn(
-      role = "user",
-      contents = list(ellmer::ContentText(system_prompt))
-    ))
-    system_prompt <- NULL
-  }
-
-  # Temperature doesn't work with o-series models
-  if (grepl("^o\\d+", model)) {
-    api_args$temperature <- NULL # gives error if != 1
-    api_args$n <- NULL # is ignored
-    api_args$top_p <- NULL # unsupported
-    api_args$presence_penalty <- NULL # unsupported
-    api_args$frequency_penalty <- NULL # unsupported
-  }
-
-  ellmer::chat_openai(
-    system_prompt = system_prompt,
-    turns = turns,
-    base_url = base_url,
-    api_key = api_key,
-    model = model,
-    seed = seed,
-    api_args = api_args,
-    echo = echo
-  )
 }
