@@ -18,7 +18,8 @@ compute_model_correlation(
 
 \item{filter_parsing}{If TRUE, filter to clean parsing responses only.}
 
-\item{parsing_data}{Data with parsing classifications (if filter_parsing = TRUE).}
+\item{parsing_data}{Data with parsing classifications (if filter_parsing =
+TRUE).}
 }
 \value{
 A tibble with correlation posterior summaries.

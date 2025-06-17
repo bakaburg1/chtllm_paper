@@ -2,28 +2,33 @@
 % Please edit documentation in R/analyze.R
 \name{extract_posterior_draws}
 \alias{extract_posterior_draws}
-\title{Extract posterior draws for any brms model}
+\title{Extract posterior draws from fitted Bayesian models}
 \usage{
-extract_posterior_draws(
-  model,
-  cores = parallel::detectCores(),
-  ndraws = NULL,
-  resp = NULL
-)
+extract_posterior_draws(model, ndraws = NULL, resp = NULL, seed = NULL)
 }
 \arguments{
-\item{model}{A fitted \code{brms} model.}
+\item{model}{Fitted brms model object.}
 
-\item{cores}{Number of cores for parallel processing.}
+\item{ndraws}{Number of draws to extract (NULL for all draws).}
 
-\item{ndraws}{Number of posterior draws to extract.}
+\item{resp}{Response variable name for multivariate models (NULL for
+univariate).}
 
-\item{resp}{Response variable name for multivariate models.}
+\item{seed}{Random seed for reproducible subsampling when ndraws is not NULL.
+If NULL, results may vary between runs.}
 }
 \value{
-A tibble with posterior draws.
+A tibble with posterior draws, always using \code{.prob} as the value
+column for consistency across model types.
 }
 \description{
-Extracts posterior draws using tidybayes::add_epred_draws with parallel
-processing support. Works for binomial, ordinal, and multinomial models.
+Extracts posterior draws from fitted brms models using tidybayes, with
+support for subsampling and reproducible results.
+}
+\details{
+This function provides a consistent interface for extracting posterior
+predictive draws across different brms model types (binomial, multinomial,
+ordinal). When ndraws is specified and is less than the total number of
+posterior draws, the function will randomly subsample. Use the seed parameter
+to ensure reproducible subsampling.
 }

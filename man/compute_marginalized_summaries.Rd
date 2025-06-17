@@ -14,9 +14,9 @@ compute_marginalized_summaries(
 \arguments{
 \item{draws}{Output from extract_posterior_draws().}
 
-\item{group_vars}{Variables to group by for marginalization.}
+\item{group_vars}{Vector of variable names to group by for marginalization.}
 
-\item{summary_vars}{Variables to summarize (default: .epred or .prob).}
+\item{summary_vars}{Variables to summarize (default: .prob).}
 
 \item{ci_width}{Credible interval width (default: 0.95).}
 }
@@ -25,6 +25,6 @@ A tibble with posterior summaries.
 }
 \description{
 Computes posterior summaries after marginalizing over specified grouping
-variables. Supports different marginalization strategies for various
-analysis needs.
+variables. Supports different marginalization strategies for various analysis
+needs.
 }

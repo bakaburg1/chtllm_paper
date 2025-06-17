@@ -18,41 +18,45 @@ prepare_correctness_data <- function(results) {
     filter(.data$total > 0)
 }
 
-#' Prepare data for parsing model (ordinal)
+#' Prepare data for parsing model (multinomial)
 #'
-#' Creates per-replication data with ordinal parsing quality levels based on
-#' response patterns. Classifies responses as "none" (not found), "rescued"
-#' (required cleaning), or "clean" (direct answer).
+#' Aggregates parsing quality levels (none, rescued, clean) by item, model, and
+#' modality to create data suitable for multinomial parsing modeling. Classifies
+#' responses as "none" (not found), "rescued" (required cleaning), or "clean"
+#' (direct answer).
 #'
 #' @param results Raw results data from targets pipeline.
-#' @return A tibble with per-replication ordinal parsing quality.
+#' @return A tibble with counts for each parsing quality level.
 #' @export
 prepare_parsing_data <- function(results) {
   results |>
     filter(.data$status != "E") |>
     mutate(
-      parse_ord = factor(
-        case_when(
-          .data$status == "N" ~ "none",
-          stringr::str_detect(.data$raw_response, "\\*") |
-            (nchar(.data$raw_response) > 3 &
-              .data$status %in% c("C", "F")) ~
-            "rescued",
-          stringr::str_detect(.data$raw_response, "^[ABCD]$") ~ "clean",
-          .default = "rescued"
-        ),
-        levels = c("none", "rescued", "clean"),
-        ordered = TRUE
+      parse_category = case_when(
+        .data$status == "N" ~ "none",
+        stringr::str_detect(.data$raw_response, "\\*") ~ "rescued",
+        .default = "clean"
       )
     ) |>
-    select(
-      "item",
-      "model_id",
-      "modality",
-      "replication",
-      "parse_ord"
+    summarise(
+      none = NA_real_,
+      rescued = NA_real_,
+      clean = NA_real_,
+      across(
+        c("none", "rescued", "clean"),
+        ~ sum(.data$parse_category == cur_column())
+      ),
+      total = n(),
+      .by = c("item", "model_id", "modality")
     ) |>
-    filter(!is.na(.data$parse_ord))
+    filter(.data$total > 0) |>
+    mutate(
+      y = cbind(
+        none = .data$none,
+        rescued = .data$rescued,
+        clean = .data$clean
+      )
+    )
 }
 
 #' Prepare data for consistency model (multinomial)
@@ -79,90 +83,14 @@ prepare_consistency_data <- function(results) {
       .by = c("item", "model_id", "modality")
     ) |>
     filter(.data$total > 0) |>
-    mutate(y = cbind(.data$A, .data$B, .data$C, .data$D))
-}
-
-#' Generate plots for model effects
-#'
-#' Creates conditional effects plots for fitted Bayesian models, including
-#' model comparisons and modality effects visualizations.
-#'
-#' @param model A fitted `brms` model.
-#' @param title_prefix Prefix for plot titles.
-#' @return A list of `ggplot2` objects.
-#' @importFrom brms conditional_effects
-#' @export
-plot_model_effects <- function(model, title_prefix = "Model") {
-  rlang::check_installed(c("ggplot2", "forcats", "scales"))
-
-  eff <- brms::conditional_effects(model, robust = TRUE)
-
-  # Color palette for modalities
-  pal <- c(
-    cold = "lightblue",
-    free = "darkgoldenrod1",
-    reasoning = "darkred"
-  )
-
-  plots <- list()
-
-  # Model effects plot
-  if ("model_id" %in% names(eff)) {
-    plots$model_effects <- eff$model_id |>
-      mutate(
-        model_id = forcats::fct_reorder(
-          .data$model_id,
-          .data$estimate__,
-          .desc = FALSE
-        )
-      ) |>
-      ggplot2::ggplot() +
-      ggplot2::aes(.data$model_id, .data$estimate__) +
-      ggplot2::geom_linerange(
-        ggplot2::aes(ymin = .data$lower__, ymax = .data$upper__),
-        linewidth = 0.8
-      ) +
-      ggplot2::geom_point(
-        ggplot2::aes(color = .data$estimate__),
-        show.legend = FALSE,
-        size = 3
-      ) +
-      ggplot2::scale_color_viridis_c() +
-      ggplot2::coord_flip() +
-      ggplot2::theme_bw(base_size = 13) +
-      ggplot2::labs(
-        x = NULL,
-        title = paste(title_prefix, "by model"),
-        subtitle = "Points = posterior median, bars = 95% CrI"
+    mutate(
+      y = cbind(
+        A = .data$A,
+        B = .data$B,
+        C = .data$C,
+        D = .data$D
       )
-  }
-
-  # Modality effects plot
-  if ("modality" %in% names(eff)) {
-    plots$modality_effects <- eff$modality |>
-      ggplot2::ggplot() +
-      ggplot2::aes(.data$modality, .data$estimate__) +
-      ggplot2::geom_linerange(
-        ggplot2::aes(ymin = .data$lower__, ymax = .data$upper__),
-        linewidth = 0.8
-      ) +
-      ggplot2::geom_point(
-        ggplot2::aes(colour = .data$modality),
-        size = 4
-      ) +
-      ggplot2::scale_colour_manual(values = pal, guide = "none") +
-      ggplot2::theme_bw(base_size = 13) +
-      ggplot2::labs(
-        x = NULL,
-        title = paste(
-          "Effect of prompting modality on",
-          tolower(title_prefix)
-        ),
-        subtitle = "Population-average predictions with 95% CrI"
-      )
-  }
-
-  return(plots)
+    )
 }
 
 #' Calculate consistency metrics from multinomial model
@@ -207,26 +135,33 @@ calculate_consistency_metrics <- function(model) {
     ungroup()
 }
 
-#' Extract posterior draws for any brms model
+#' Extract posterior draws from fitted Bayesian models
 #'
-#' Extracts posterior draws using tidybayes::add_epred_draws with parallel
-#' processing support. Works for binomial, ordinal, and multinomial models.
+#' Extracts posterior draws from fitted brms models using tidybayes, with
+#' support for subsampling and reproducible results.
 #'
-#' @param model A fitted `brms` model.
-#' @param cores Number of cores for parallel processing.
-#' @param ndraws Number of posterior draws to extract.
-#' @param resp Response variable name for multivariate models.
+#' This function provides a consistent interface for extracting posterior
+#' predictive draws across different brms model types (binomial, multinomial,
+#' ordinal). When ndraws is specified and is less than the total number of
+#' posterior draws, the function will randomly subsample. Use the seed parameter
+#' to ensure reproducible subsampling.
 #'
-#' @return A tibble with posterior draws.
+#' @param model Fitted brms model object.
+#' @param ndraws Number of draws to extract (NULL for all draws).
+#' @param resp Response variable name for multivariate models (NULL for
+#'   univariate).
+#' @param seed Random seed for reproducible subsampling when ndraws is not NULL.
+#'   If NULL, results may vary between runs.
 #'
-#' @importFrom tidybayes add_epred_draws
+#' @return A tibble with posterior draws, always using `.prob` as the value
+#'   column for consistency across model types.
 #'
 #' @export
 extract_posterior_draws <- function(
   model,
-  cores = parallel::detectCores(),
   ndraws = NULL,
-  resp = NULL
+  resp = NULL,
+  seed = NULL
 ) {
   # Prepare newdata based on model type
   newdata <- model$data |>
@@ -238,7 +173,6 @@ extract_posterior_draws <- function(
   args <- list(
     object = model,
     newdata = newdata,
-    cores = cores,
     allow_new_levels = FALSE
   )
 
@@ -250,28 +184,33 @@ extract_posterior_draws <- function(
     args$resp <- resp
   }
 
-  # For multinomial models, use .prob as value name
-  if (
-    inherits(model$family, "brmsfamily") && model$family$family == "multinomial"
-  ) {
-    args$value <- ".prob"
+  # Add seed parameter for reproducible subsampling
+  if (!is.null(seed)) {
+    args$seed <- seed
   }
 
-  do.call(tidybayes::add_epred_draws, args)
+  # Always use .prob as value name
+  args$value <- ".prob"
+
+  # Extract draws
+  do.call(tidybayes::add_epred_draws, args) |>
+    # Remove grouping structure
+    ungroup()
 }
 
 #' Compute marginalized posterior summaries
 #'
 #' Computes posterior summaries after marginalizing over specified grouping
-#' variables. Supports different marginalization strategies for various
-#' analysis needs.
+#' variables. Supports different marginalization strategies for various analysis
+#' needs.
 #'
 #' @param draws Output from extract_posterior_draws().
-#' @param group_vars Variables to group by for marginalization.
-#' @param summary_vars Variables to summarize (default: .epred or .prob).
+#' @param group_vars Vector of variable names to group by for marginalization.
+#' @param summary_vars Variables to summarize (default: .prob).
 #' @param ci_width Credible interval width (default: 0.95).
+#'
 #' @return A tibble with posterior summaries.
-#' @importFrom tidybayes median_qi
+#'
 #' @export
 compute_marginalized_summaries <- function(
   draws,
@@ -283,235 +222,30 @@ compute_marginalized_summaries <- function(
 
   # Determine summary variables if not specified
   if (is.null(summary_vars)) {
-    if (".epred" %in% names(draws)) {
-      summary_vars <- ".epred"
-    } else if (".prob" %in% names(draws)) {
+    if (".prob" %in% names(draws)) {
       summary_vars <- ".prob"
     } else {
-      stop("Could not determine summary variables automatically")
+      stop("Could not find .prob column in draws")
     }
+  }
+
+  # Special handling for parsing data: focus on "clean" category only
+  if (".category" %in% names(draws) &&
+      "clean" %in% unique(draws$.category)) {
+    draws <- draws |>
+      filter(.data$.category == "clean")
   }
 
   # Group and summarize
   draws |>
     summarise(
+      # Marginalizing step
       across(all_of(summary_vars), mean),
-      .by = c(group_vars, ".draw")
+      .by = all_of(c(group_vars, ".draw"))
     ) |>
     group_by(pick(all_of(group_vars))) |>
     tidybayes::median_qi(!!!syms(summary_vars), .width = ci_width) |>
     ungroup()
-}
-
-#' Calculate scaled KL divergence for consistency analysis
-#'
-#' Computes scaled Kullback-Leibler divergence from uniform distribution
-#' for multinomial response patterns. Higher values indicate more
-#' deterministic (less consistent) response patterns.
-#'
-#' @param draws Posterior draws from multinomial consistency model.
-#' @param n_options Number of response options (default: 4 for A,B,C,D).
-#' @return A tibble with scaled KL divergence metrics.
-#' @export
-calculate_scaled_kl_divergence <- function(draws, n_options = 4) {
-  uniform_prob <- 1 / n_options
-  log_n_options <- log(n_options)
-
-  draws |>
-    ungroup() |>
-    summarise(
-      # Calculate KL divergence from uniform distribution
-      kl_raw = sum(.data$.prob * log(.data$.prob / uniform_prob + 1e-10)),
-      # Scale to [0, 1] range
-      kl_scaled = 1 - .data$kl_raw / log_n_options,
-      .by = c("model_id", "modality", "item", ".draw")
-    ) |>
-    # Average across items for each model/modality
-    summarise(
-      across(c("kl_raw", "kl_scaled"), mean),
-      .by = c(".draw", "model_id", "modality")
-    ) |>
-    # Get posterior summaries
-    group_by(.data$model_id, .data$modality) |>
-    tidybayes::median_qi(.data$kl_raw, .data$kl_scaled) |>
-    ungroup()
-}
-
-#' Create comprehensive summary plots
-#'
-#' Generates publication-ready plots for marginalized posterior summaries,
-#' including model comparisons, modality effects, and interaction plots.
-#'
-#' @param summaries Output from compute_marginalized_summaries().
-#' @param metric_name Name of the metric being plotted.
-#' @param y_transform Transformation function for y-axis (e.g.,
-#'   scales::percent).
-#' @param y_label Label for y-axis.
-#'
-#' @return A list of ggplot objects.
-#'
-#' @export
-create_summary_plots <- function(
-  summaries,
-  metric_name,
-  y_transform = NULL,
-  y_label = NULL
-) {
-  rlang::check_installed(c("ggplot2", "forcats", "scales"))
-
-  # Color palette for modalities
-  pal <- c(
-    cold = "lightblue",
-    free = "darkgoldenrod1",
-    reasoning = "darkred"
-  )
-
-  # Determine the main metric column
-  metric_col <- names(summaries)[
-    !names(summaries) %in%
-      c(
-        "model_id",
-        "modality",
-        ".lower",
-        ".upper",
-        ".width",
-        ".point",
-        ".interval"
-      )
-  ]
-
-  if (length(metric_col) > 1) {
-    metric_col <- metric_col[1]
-    message("Multiple metric columns found, using: ", metric_col)
-  }
-
-  plots <- list()
-
-  # Model comparison plot (averaged over modalities)
-  if ("model_id" %in% names(summaries) && "modality" %in% names(summaries)) {
-    model_summary <- summaries |>
-      summarise(
-        estimate = mean(.data[[metric_col]]),
-        .lower = mean(.data$.lower),
-        .upper = mean(.data$.upper),
-        .by = "model_id"
-      ) |>
-      mutate(
-        model_id = forcats::fct_reorder(
-          .data$model_id,
-          .data$estimate,
-          .desc = FALSE
-        )
-      )
-
-    plots$by_model <- model_summary |>
-      ggplot2::ggplot() +
-      ggplot2::aes(.data$model_id, .data$estimate) +
-      ggplot2::geom_linerange(
-        ggplot2::aes(ymin = .data$.lower, ymax = .data$.upper),
-        linewidth = 0.8
-      ) +
-      ggplot2::geom_point(
-        ggplot2::aes(color = .data$estimate),
-        show.legend = FALSE,
-        size = 3
-      ) +
-      ggplot2::scale_color_viridis_c() +
-      ggplot2::coord_flip() +
-      ggplot2::theme_bw(base_size = 13) +
-      ggplot2::labs(
-        x = NULL,
-        y = y_label %||% metric_name,
-        title = paste(stringr::str_to_title(metric_name), "by model"),
-        subtitle = "Points = posterior median, bars = 95% CrI"
-      )
-
-    if (!is.null(y_transform)) {
-      plots$by_model <- plots$by_model +
-        ggplot2::scale_y_continuous(labels = y_transform)
-    }
-  }
-
-  # Modality comparison plot (averaged over models)
-  if ("modality" %in% names(summaries)) {
-    modality_summary <- summaries |>
-      summarise(
-        estimate = mean(.data[[metric_col]]),
-        .lower = mean(.data$.lower),
-        .upper = mean(.data$.upper),
-        .by = "modality"
-      )
-
-    plots$by_modality <- modality_summary |>
-      ggplot2::ggplot() +
-      ggplot2::aes(.data$modality, .data$estimate) +
-      ggplot2::geom_linerange(
-        ggplot2::aes(ymin = .data$.lower, ymax = .data$.upper),
-        linewidth = 0.8
-      ) +
-      ggplot2::geom_point(
-        ggplot2::aes(colour = .data$modality),
-        size = 4
-      ) +
-      ggplot2::scale_colour_manual(values = pal, guide = "none") +
-      ggplot2::theme_bw(base_size = 13) +
-      ggplot2::labs(
-        x = NULL,
-        y = y_label %||% metric_name,
-        title = paste("Effect of prompting modality on", metric_name),
-        subtitle = "Population-average predictions with 95% CrI"
-      )
-
-    if (!is.null(y_transform)) {
-      plots$by_modality <- plots$by_modality +
-        ggplot2::scale_y_continuous(labels = y_transform)
-    }
-  }
-
-  # Interaction plot
-  if ("model_id" %in% names(summaries) && "modality" %in% names(summaries)) {
-    interaction_data <- summaries |>
-      mutate(
-        model_id = forcats::fct_reorder(
-          .data$model_id,
-          .data[[metric_col]],
-          .desc = FALSE
-        )
-      )
-
-    plots$interaction <- interaction_data |>
-      ggplot2::ggplot() +
-      ggplot2::aes(
-        .data$model_id,
-        .data[[metric_col]],
-        colour = .data$modality
-      ) +
-      ggplot2::geom_linerange(
-        ggplot2::aes(ymin = .data$.lower, ymax = .data$.upper),
-        position = ggplot2::position_dodge(width = 0.6),
-        size = 0.8
-      ) +
-      ggplot2::geom_point(
-        position = ggplot2::position_dodge(width = 0.6),
-        size = 3
-      ) +
-      ggplot2::scale_colour_manual(values = pal, name = "Modality") +
-      ggplot2::coord_flip() +
-      ggplot2::theme_bw(base_size = 13) +
-      ggplot2::labs(
-        x = NULL,
-        y = y_label %||% metric_name,
-        title = paste("Model × modality interaction for", metric_name),
-        subtitle = "Population-average predictions with 95% CrI"
-      )
-
-    if (!is.null(y_transform)) {
-      plots$interaction <- plots$interaction +
-        ggplot2::scale_y_continuous(labels = y_transform)
-    }
-  }
-
-  return(plots)
 }
 
 #' Compute correlation between model predictions
@@ -522,8 +256,11 @@ create_summary_plots <- function(
 #' @param model1_draws Posterior draws from first model.
 #' @param model2_draws Posterior draws from second model.
 #' @param filter_parsing If TRUE, filter to clean parsing responses only.
-#' @param parsing_data Data with parsing classifications (if filter_parsing = TRUE).
+#' @param parsing_data Data with parsing classifications (if filter_parsing =
+#'   TRUE).
+#'
 #' @return A tibble with correlation posterior summaries.
+#'
 #' @export
 compute_model_correlation <- function(
   model1_draws,
@@ -533,9 +270,9 @@ compute_model_correlation <- function(
 ) {
   # Prepare data for correlation
   if (filter_parsing && !is.null(parsing_data)) {
-    # Filter to clean parsing responses only
+    # Filter to combinations where clean parsing responses dominate
     clean_responses <- parsing_data |>
-      filter(.data$parse_ord == "clean") |>
+      filter(.data$clean > 0) |>
       distinct(.data$item, .data$model_id, .data$modality)
 
     model1_draws <- model1_draws |>
@@ -545,9 +282,20 @@ compute_model_correlation <- function(
       semi_join(clean_responses, by = c("item", "model_id", "modality"))
   }
 
-  # Determine metric columns
-  metric1 <- if (".epred" %in% names(model1_draws)) ".epred" else ".prob"
-  metric2 <- if (".epred" %in% names(model2_draws)) ".epred" else ".prob"
+  # Use .prob as metric column (consistent with extract_posterior_draws)
+  metric1 <- ".prob"
+  metric2 <- ".prob"
+
+  # Handle the parsing model by focusing on the "clean" category
+  if (".category" %in% names(model2_draws)) {
+    model2_draws <- model2_draws |>
+      filter(.data$.category == "clean")
+  }
+
+  if (".category" %in% names(model1_draws)) {
+    model1_draws <- model1_draws |>
+      filter(.data$.category == "clean")
+  }
 
   # Join draws by common grouping variables
   join_vars <- intersect(
@@ -572,4 +320,86 @@ compute_model_correlation <- function(
       .by = ".draw"
     ) |>
     tidybayes::median_qi(.data$correlation)
+}
+
+#' Compute KL Divergence consistency score from posterior draws
+#'
+#' Transforms posterior probability draws into a scaled KL divergence value,
+#' measuring deviation from a uniform distribution. A score of 1 represents
+#' perfect consistency (a deterministic response), while a score of 0 represents
+#' perfect inconsistency (a uniform distribution of responses).
+#'
+#' @param draws Posterior draws from multinomial consistency model with .prob
+#'   and .category columns.
+#'
+#' @return A tibble with scaled KL divergence values in .prob column. Higher
+#'   values indicate higher consistency.
+#'
+#' @export
+compute_consistency_kl <- function(draws) {
+  # Determine number of options from the data
+  n_options <- length(unique(draws$.category))
+  uniform_prob <- 1 / n_options
+  log_n_options <- log(n_options)
+
+  draws |>
+    ungroup() |>
+    summarise(
+      # Calculate KL divergence from uniform distribution
+      kl_raw = sum(.data$.prob * log(.data$.prob / uniform_prob + 1e-10)),
+      # Scale to [0, 1] range. 1 = consistent, 0 = inconsistent.
+      .prob = 1 - (.data$kl_raw / log_n_options),
+      .by = c("model_id", "modality", "item", ".draw")
+    ) |>
+    # Use .prob column for seamless pipeline integration
+    select("model_id", "modality", "item", ".draw", ".prob")
+}
+
+#' Compute Simpson consistency score from posterior draws
+#'
+#' Calculates the Simpson concentration index from posterior probability draws.
+#' The index represents the probability that two randomly selected responses
+#' would be the same. A score of 1 represents perfect consistency (a
+#' deterministic response).
+#'
+#' @param draws Posterior draws from multinomial consistency model with .prob
+#'   and .category columns.
+#'
+#' @return A tibble with Simpson index values in .prob column. Higher values
+#'   indicate higher consistency.
+#'
+#' @export
+compute_consistency_simpson <- function(draws) {
+  draws |>
+    ungroup() |>
+    summarise(
+      .prob = sum(.data$.prob^2),
+      .by = c("model_id", "modality", "item", ".draw")
+    ) |>
+    # Use .prob column for seamless pipeline integration
+    select("model_id", "modality", "item", ".draw", ".prob")
+}
+
+#' Compute Modal consistency score from posterior draws
+#'
+#' Calculates the modal probability from posterior draws. The score is the
+#' probability of the most likely response category. A score of 1 represents
+#' perfect consistency (a deterministic response).
+#'
+#' @param draws Posterior draws from multinomial consistency model with .prob
+#'   and .category columns.
+#'
+#' @return A tibble with modal probability values in .prob column. Higher values
+#'   indicate higher consistency.
+#'
+#' @export
+compute_consistency_modal <- function(draws) {
+  draws |>
+    ungroup() |>
+    summarise(
+      .prob = max(.data$.prob),
+      .by = c("model_id", "modality", "item", ".draw")
+    ) |>
+    # Use .prob column for seamless pipeline integration
+    select("model_id", "modality", "item", ".draw", ".prob")
 }

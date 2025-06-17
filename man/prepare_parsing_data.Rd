@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyze.R
 \name{prepare_parsing_data}
 \alias{prepare_parsing_data}
-\title{Prepare data for parsing model (ordinal)}
+\title{Prepare data for parsing model (multinomial)}
 \usage{
 prepare_parsing_data(results)
 }
@@ -10,10 +10,11 @@ prepare_parsing_data(results)
 \item{results}{Raw results data from targets pipeline.}
 }
 \value{
-A tibble with per-replication ordinal parsing quality.
+A tibble with counts for each parsing quality level.
 }
 \description{
-Creates per-replication data with ordinal parsing quality levels based on
-response patterns. Classifies responses as "none" (not found), "rescued"
-(required cleaning), or "clean" (direct answer).
+Aggregates parsing quality levels (none, rescued, clean) by item, model, and
+modality to create data suitable for multinomial parsing modeling. Classifies
+responses as "none" (not found), "rescued" (required cleaning), or "clean"
+(direct answer).
 }
