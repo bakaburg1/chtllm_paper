@@ -192,7 +192,6 @@ plot_pareto_frontier <- function(
     correctness_summaries,
     models_data
 ) {
-  rlang::check_installed("ggrepel")
 
   # Prepare data by joining correctness with cost information
   plot_data <- correctness_summaries |>
@@ -273,7 +272,8 @@ plot_pareto_frontier <- function(
       linewidth = 0.8,
       alpha = 0.5
     ) +
-    # All models with aesthetic mappings for frontier, model type, and deployment
+    # All models with aesthetic mappings for frontier, model type, and
+    # deployment
     geom_point(
       aes(
         color = .data$frontier_status,
@@ -346,4 +346,84 @@ plot_pareto_frontier <- function(
       caption = "Points = individual models; Lines = Pareto-efficient frontiers"
     ) +
     theme_bw(base_size = 13)
+}
+
+#' Plot correctness by item mosaic
+#'
+#' Creates a mosaic plot showing model correctness for each item.
+#'
+#' The plot is a matrix of models versus items, where the fill color represents
+#' the median posterior probability of a correct response, and the transparency
+#' reflects the certainty of the estimate (1 - CrI width).
+#'
+#' @param correctness_summaries A data frame containing posterior summaries of
+#'   correctness, grouped by model and item. Must include `.prob`, `.lower`, and
+#'   `.upper` columns.
+#' @param min_alpha The minimum alpha value for transparency (default is 0.25).
+#'
+#' @return A ggplot object.
+#' @export
+plot_correctness_mosaic <- function(
+    correctness_summaries,
+    min_alpha = 0.25
+) {
+  # Reorder models by average correctness (worst on top, best at bottom)
+  model_order <- correctness_summaries |>
+    summarise(
+      avg_correctness = mean(.data$.prob, na.rm = TRUE),
+      .by = "model_id"
+    ) |>
+    arrange(.data$avg_correctness) |>
+    pull(.data$model_id)
+
+  plot_data <- correctness_summaries |>
+    mutate(
+      # Credible interval size (width)
+      cri_width = .data$.upper - .data$.lower,
+      # Alpha: higher for smaller CrI (more certainty)
+      alpha = 1 - .data$cri_width,
+      # Ensure item is a factor sorted numerically
+      item = factor(as.numeric(.data$item)),
+      # Ensure model_id is a factor with the desired order
+      model_id = factor(.data$model_id, levels = model_order)
+    )
+
+  ggplot(
+    plot_data,
+    aes(
+      x = .data$item,
+      y = .data$model_id,
+      fill = .data$.prob
+    )
+  ) +
+    # Use alpha aesthetic in geom_tile
+    geom_tile(
+      aes(alpha = .data$alpha),
+      color = "white",
+      linewidth = 0.5
+    ) +
+    scale_fill_viridis_c(
+      name = "Median\nCorrectness",
+      labels = scales::percent_format(accuracy = 1)
+    ) +
+    # Alpha scale ensures transparency is mapped correctly
+    scale_alpha_continuous(
+      range = c(min_alpha, 1.0), # Map to a visible range
+      guide = "none" # Hide alpha legend
+    ) +
+    labs(
+      x = "Benchmark Item ID",
+      y = "Model",
+      title = "Some questions are inherently harder for all models",
+      subtitle = paste(
+        "Color indicates median correctness;",
+        "transparency reflects certainty (1 - CrI width)."
+      )
+    ) +
+    theme_minimal(base_size = 14) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+      panel.grid = element_blank(),
+      legend.position = "right"
+    )
 }
