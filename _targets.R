@@ -11,22 +11,26 @@ pkgs <- c(
   "cmdstanr",
   "tidybayes",
   "forcats",
-  "scales"
+  "scales",
+  "ggrepel",
+  "gt"
 )
 
 tar_option_set(
   workspace_on_error = TRUE,
   packages = pkgs,
-  # Parallel processing
-  controller = crew::crew_controller_local(workers = parallel::detectCores()),
+  controller = crew::crew_controller_local(
+    workers = parallel::detectCores(),
+    garbage_collection = TRUE,
+    options_local = crew::crew_options_local("logs"),
+    seconds_idle = 60 # Clean up idle workers after 60 seconds
+  ),
   error = "null", # Keep going even if error. We will review all errors later
   debug = NULL # put here targets to investigate, as a string or vector
 )
 
 # Load functions
 tar_source("R")
-
-detected_cores <- parallel::detectCores()
 
 # Pipeline definition
 list(
@@ -41,11 +45,6 @@ list(
   tar_target(
     temperature,
     0.5
-  ),
-
-  tar_target(
-    max_tokens,
-    1200
   ),
 
   # File paths
@@ -65,8 +64,7 @@ list(
       path <- here::here("results", "processed")
       if (!dir.exists(path)) dir.create(path, recursive = TRUE)
       path
-    },
-    format = "file"
+    }
   ),
 
   tar_target(
@@ -75,8 +73,25 @@ list(
       path <- here::here("results", "processing")
       if (!dir.exists(path)) dir.create(path, recursive = TRUE)
       path
-    },
-    format = "file"
+    }
+  ),
+
+  tar_target(
+    models_dir,
+    {
+      path <- here::here("models")
+      if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+      path
+    }
+  ),
+
+  tar_target(
+    outputs_dir,
+    {
+      path <- here::here("outputs")
+      if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+      path
+    }
   ),
 
   # Define which status to reprocess
@@ -323,20 +338,20 @@ list(
     format = "file"
   ),
 
-  # Bayesian Analysis ----------
+  # Model fitting ----------
 
   # MCMC configuration parameters
   tar_target(
     mcmc_config,
     {
-      detected_cores <- detected_cores # Edit bas
-      cores <- max(2L, detected_cores)
-      threads <- max(1L, floor(detected_cores / cores))
+      detected_cores <- parallel::detectCores()
+      cores <- min(2L, detected_cores)
+      threads <- floor(detected_cores / cores)
 
       list(
         backend = "cmdstanr",
         chains = 2L,
-        iter = 5000L,
+        iter = 4000L,
         warmup = 1000L,
         cores = cores,
         threads = threads,
@@ -365,19 +380,23 @@ list(
   tar_target(
     fit_correctness,
     {
-      priors_correctness <- c(
-        brms::prior(normal(0, 1.5), class = "b"),
+      priors <- c(
+        # LKJ prior for correlation matrices
+        brms::prior(lkj(2), class = "cor"),
+        # Random-effect SDs for item intercepts
         brms::prior(student_t(3, 0, 1.5), class = "sd")
       )
 
-      file_path <- "models/fit_correctness.rds"
+      file_path <- file.path(models_dir, "fit_correctness.rds")
+
+      message("Fitting correctness model...")
 
       brms::brm(
         formula = correct | trials(total) ~
           0 + (modality | model_id) + (1 | item),
         family = binomial(),
         data = data_correctness,
-        prior = priors_correctness,
+        prior = priors,
         backend = mcmc_config$backend,
         cores = mcmc_config$cores,
         chains = mcmc_config$chains,
@@ -396,18 +415,31 @@ list(
   tar_target(
     fit_parsing,
     {
-      priors_parsing <- c(
-        brms::prior(normal(0, 1.5), class = "b"),
-        brms::prior(student_t(3, 0, 1.5), class = "sd")
+      priors <- c(
+        # LKJ prior for correlation matrices
+        brms::prior(lkj(2), class = "cor"),
+        # Random-effect SDs for item intercepts
+        brms::prior(
+          student_t(3, 0, 1.5),
+          class = "sd",
+          dpar = "muclean"
+        ),
+        brms::prior(
+          student_t(3, 0, 1.5),
+          class = "sd",
+          dpar = "murescued"
+        )
       )
 
-      file_path <- "models/fit_parsing.rds"
+      file_path <- file.path(models_dir, "fit_parsing.rds")
+
+      message("Fitting parsing model...")
 
       brms::brm(
-        formula = parse_ord ~ (modality | model_id) + (1 | item),
-        family = cumulative("logit"),
+        formula = y | trials(total) ~ 0 + (modality | model_id) + (1 | item),
+        family = multinomial(),
         data = data_parsing,
-        prior = priors_parsing,
+        prior = priors,
         backend = mcmc_config$backend,
         cores = mcmc_config$cores,
         chains = mcmc_config$chains,
@@ -426,41 +458,37 @@ list(
   tar_target(
     fit_consistency,
     {
-      priors_consistency <- c(
-        # Population effects for every non-reference outcome
-        brms::prior(normal(0, 1.5), class = "b", dpar = "muB"),
-        brms::prior(normal(0, 1.5), class = "b", dpar = "muC"),
-        brms::prior(normal(0, 1.5), class = "b", dpar = "muD"),
+      priors <- c(
+        # LKJ prior for correlation matrices
+        brms::prior(lkj(2), class = "cor"),
         # Random-effect SDs for item intercepts
         brms::prior(
           student_t(3, 0, 1.5),
           class = "sd",
-          group = "item",
           dpar = "muB"
         ),
         brms::prior(
           student_t(3, 0, 1.5),
           class = "sd",
-          group = "item",
           dpar = "muC"
         ),
         brms::prior(
           student_t(3, 0, 1.5),
           class = "sd",
-          group = "item",
           dpar = "muD"
         )
       )
 
-      file_path <- "models/fit_consistency.rds"
+      file_path <- file.path(models_dir, "fit_consistency.rds")
+
+      message("Fitting consistency model...")
 
       brms::brm(
         formula = y | trials(total) ~ 0 + (modality | model_id) + (1 | item),
         family = multinomial(),
         data = data_consistency,
-        prior = priors_consistency,
+        prior = priors,
         backend = mcmc_config$backend,
-        save_pars = brms::save_pars(all = TRUE),
         cores = mcmc_config$cores,
         chains = mcmc_config$chains,
         threads = brms::threading(mcmc_config$threads),
@@ -477,29 +505,65 @@ list(
 
   # Posterior Analysis ----------
 
+  # Number of posterior draws to extract (NULL = all draws)
+  tar_target(
+    posterior_draws,
+    NULL
+  ),
+
   # Extract posterior draws for all models
   tar_target(
     draws_correctness,
-    extract_posterior_draws(
-      model = readRDS(fit_correctness),
-      cores = mcmc_config$cores
-    )
+    {
+      options(mc.cores = parallel::detectCores())
+      extract_posterior_draws(
+        model = readRDS(fit_correctness),
+        ndraws = posterior_draws,
+        seed = mcmc_config$seed
+      )
+    }
   ),
 
   tar_target(
     draws_parsing,
-    extract_posterior_draws(
-      model = readRDS(fit_parsing),
-      cores = mcmc_config$cores
-    )
+    {
+      options(mc.cores = parallel::detectCores())
+      extract_posterior_draws(
+        model = readRDS(fit_parsing),
+        ndraws = posterior_draws,
+        seed = mcmc_config$seed
+      )
+    }
   ),
 
   tar_target(
     draws_consistency,
-    extract_posterior_draws(
-      model = readRDS(fit_consistency),
-      cores = mcmc_config$cores
-    )
+    {
+      options(mc.cores = parallel::detectCores())
+
+      # Extract raw posterior draws
+      extract_posterior_draws(
+        model = readRDS(fit_consistency),
+        ndraws = posterior_draws,
+        seed = mcmc_config$seed
+      )
+    }
+  ),
+
+  # Per-question consistency scores
+  tar_target(
+    consistency_kl_draws,
+    compute_consistency_kl(draws_consistency)
+  ),
+
+  tar_target(
+    consistency_simpson_draws,
+    compute_consistency_simpson(draws_consistency)
+  ),
+
+  tar_target(
+    consistency_modal_draws,
+    compute_consistency_modal(draws_consistency)
   ),
 
   # Marginalized summaries for each model
@@ -551,34 +615,73 @@ list(
     )
   ),
 
+  # KL Divergence Summaries
   tar_target(
-    summaries_consistency_by_model,
+    summaries_consistency_kl_by_model,
     compute_marginalized_summaries(
-      draws = draws_consistency,
+      draws = consistency_kl_draws,
       group_vars = "model_id"
     )
   ),
-
   tar_target(
-    summaries_consistency_by_modality,
+    summaries_consistency_kl_by_modality,
     compute_marginalized_summaries(
-      draws = draws_consistency,
+      draws = consistency_kl_draws,
       group_vars = "modality"
     )
   ),
-
   tar_target(
-    summaries_consistency_interaction,
+    summaries_consistency_kl_interaction,
     compute_marginalized_summaries(
-      draws = draws_consistency,
+      draws = consistency_kl_draws,
       group_vars = c("model_id", "modality")
     )
   ),
 
-  # KL divergence for consistency
+  # Simpson Index Summaries
   tar_target(
-    kl_divergence_consistency,
-    calculate_scaled_kl_divergence(draws_consistency)
+    summaries_consistency_simpson_by_model,
+    compute_marginalized_summaries(
+      draws = consistency_simpson_draws,
+      group_vars = "model_id"
+    )
+  ),
+  tar_target(
+    summaries_consistency_simpson_by_modality,
+    compute_marginalized_summaries(
+      draws = consistency_simpson_draws,
+      group_vars = "modality"
+    )
+  ),
+  tar_target(
+    summaries_consistency_simpson_interaction,
+    compute_marginalized_summaries(
+      draws = consistency_simpson_draws,
+      group_vars = c("model_id", "modality")
+    )
+  ),
+
+  # Modal Probability Summaries
+  tar_target(
+    summaries_consistency_modal_by_model,
+    compute_marginalized_summaries(
+      draws = consistency_modal_draws,
+      group_vars = "model_id"
+    )
+  ),
+  tar_target(
+    summaries_consistency_modal_by_modality,
+    compute_marginalized_summaries(
+      draws = consistency_modal_draws,
+      group_vars = "modality"
+    )
+  ),
+  tar_target(
+    summaries_consistency_modal_interaction,
+    compute_marginalized_summaries(
+      draws = consistency_modal_draws,
+      group_vars = c("model_id", "modality")
+    )
   ),
 
   # # Store summary tables
@@ -637,10 +740,12 @@ list(
   #   format = "file"
   # ),
 
+  # Plotting ----------
+
   # Generate and store plots
   tar_target(
     correctness_plots,
-    create_summary_plots(
+    plot_summaries(
       summaries = summaries_correctness_interaction,
       metric_name = "correctness",
       y_transform = scales::percent_format(accuracy = 1),
@@ -650,7 +755,7 @@ list(
 
   tar_target(
     parsing_plots,
-    create_summary_plots(
+    plot_summaries(
       summaries = summaries_parsing_interaction,
       metric_name = "parsing quality",
       y_label = "Parsing quality (ordinal scale)"
@@ -658,66 +763,31 @@ list(
   ),
 
   tar_target(
-    consistency_plots,
-    create_summary_plots(
-      summaries = summaries_consistency_interaction,
-      metric_name = "response consistency",
-      y_label = "Response probability"
+    consistency_kl_plots,
+    plot_summaries(
+      summaries = summaries_consistency_kl_interaction,
+      metric_name = "KL consistency",
+      y_label = "Consistency (KL Divergence)"
     )
   ),
 
   tar_target(
-    kl_divergence_plots,
-    create_summary_plots(
-      summaries = kl_divergence_consistency,
-      metric_name = "KL divergence",
-      y_label = "Scaled KL divergence"
+    consistency_simpson_plots,
+    plot_summaries(
+      summaries = summaries_consistency_simpson_interaction,
+      metric_name = "Simpson consistency",
+      y_label = "Consistency (Simpson Index)"
     )
   ),
 
-  # tar_target(
-  #   correctness_plots_file,
-  #   {
-  #     file_path <- here::here("outputs", "correctness_plots.rds")
-  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
-  #     saveRDS(correctness_plots, file_path)
-  #     file_path
-  #   },
-  #   format = "file"
-  # ),
-  #
-  # tar_target(
-  #   parsing_plots_file,
-  #   {
-  #     file_path <- here::here("outputs", "parsing_plots.rds")
-  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
-  #     saveRDS(parsing_plots, file_path)
-  #     file_path
-  #   },
-  #   format = "file"
-  # ),
-  #
-  # tar_target(
-  #   consistency_plots_file,
-  #   {
-  #     file_path <- here::here("outputs", "consistency_plots.rds")
-  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
-  #     saveRDS(consistency_plots, file_path)
-  #     file_path
-  #   },
-  #   format = "file"
-  # ),
-  #
-  # tar_target(
-  #   kl_plots_file,
-  #   {
-  #     file_path <- here::here("outputs", "kl_divergence_plots.rds")
-  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
-  #     saveRDS(kl_divergence_plots, file_path)
-  #     file_path
-  #   },
-  #   format = "file"
-  # ),
+  tar_target(
+    consistency_modal_plots,
+    plot_summaries(
+      summaries = summaries_consistency_modal_interaction,
+      metric_name = "Modal consistency",
+      y_label = "Consistency (Modal Probability)"
+    )
+  ),
 
   # Correlation analyses
   tar_target(
@@ -731,29 +801,103 @@ list(
   ),
 
   tar_target(
-    correlation_correctness_consistency,
+    correlation_correctness_consistency_kl,
     compute_model_correlation(
       model1_draws = draws_correctness,
-      model2_draws = draws_consistency,
+      model2_draws = consistency_kl_draws,
       filter_parsing = FALSE
     )
-  )
+  ),
 
-  # tar_target(
-  #   correlations_file,
-  #   {
-  #     file_path <- here::here("outputs", "model_correlations.rds")
-  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
-  #
-  #     correlations <- list(
-  #       correctness_parsing = correlation_correctness_parsing,
-  #       correctness_consistency = correlation_correctness_consistency,
-  #       parsing_consistency = correlation_parsing_consistency
-  #     )
-  #
-  #     saveRDS(correlations, file_path)
-  #     file_path
-  #   },
-  #   format = "file"
-  # )
+  tar_target(
+    correlation_correctness_consistency_simpson,
+    compute_model_correlation(
+      model1_draws = draws_correctness,
+      model2_draws = consistency_simpson_draws,
+      filter_parsing = FALSE
+    )
+  ),
+
+  tar_target(
+    correlation_correctness_consistency_modal,
+    compute_model_correlation(
+      model1_draws = draws_correctness,
+      model2_draws = consistency_modal_draws,
+      filter_parsing = FALSE
+    )
+  ),
+
+  # Pareto frontier analysis
+  tar_target(
+    pareto_frontier_plot,
+    plot_pareto_frontier(
+      correctness_summaries = summaries_correctness_by_model,
+      models_data = models
+    )
+  ),
+
+  # Tables ----------
+  tar_target(
+    table_correctness,
+    create_summary_table(
+      summaries = summaries_correctness_interaction,
+      metric_name = ".prob",
+      title = "Model Correctness",
+      subtitle = "Probability of generating the correct answer",
+      source_note = "Summaries are posterior medians with 95% CrIs.",
+      group_by_var = "modality"
+    )
+  ),
+
+  tar_target(
+    table_parsing,
+    create_summary_table(
+      summaries = summaries_parsing_interaction,
+      metric_name = ".prob",
+      title = "Clean Parsing Rate",
+      subtitle = "Probability of responses being cleanly parsed (no fixes needed)",
+      source_note = "Summaries are posterior medians with 95% CrIs.",
+      group_by_var = "modality"
+    )
+  ),
+
+  tar_target(
+    table_consistency,
+    create_summary_table(
+      summaries = summaries_consistency_kl_interaction,
+      metric_name = ".prob",
+      title = "Response Consistency (Scaled KL Divergence)",
+      subtitle = "Score of 1 is perfect consistency, 0 is uniform inconsistency",
+      source_note = "Summaries are posterior medians with 95% CrIs.",
+      group_by_var = "modality"
+    )
+  ),
+
+  # Save tables to files
+  tar_target(
+    table_correctness_file,
+    save_gt_table(
+      table_correctness,
+      path = here::here("outputs", "tables", "correctness.html")
+    ),
+    format = "file"
+  ),
+
+  tar_target(
+    table_parsing_file,
+    save_gt_table(
+      table_parsing,
+      path = here::here("outputs", "tables", "parsing.html")
+    ),
+    format = "file"
+  ),
+
+  tar_target(
+    table_consistency_file,
+    save_gt_table(
+      table_consistency,
+      path = here::here("outputs", "tables", "consistency.html")
+    ),
+    format = "file"
+  )
 )
