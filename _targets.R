@@ -592,6 +592,14 @@ list(
   ),
 
   tar_target(
+    summaries_correctness_by_model_item,
+    compute_marginalized_summaries(
+      draws = draws_correctness,
+      group_vars = c("model_id", "item")
+    )
+  ),
+
+  tar_target(
     summaries_parsing_by_model,
     compute_marginalized_summaries(
       draws = draws_parsing,
@@ -787,6 +795,11 @@ list(
       metric_name = "Modal consistency",
       y_label = "Consistency (Modal Probability)"
     )
+  ),
+
+  tar_target(
+    correctness_mosaic_plot,
+    plot_correctness_mosaic(summaries_correctness_by_model_item)
   ),
 
   # Correlation analyses
