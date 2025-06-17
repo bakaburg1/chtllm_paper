@@ -53,6 +53,37 @@ For each unique combination, in parallel, the pipeline:
 * This final dataset is saved as `results/all_results.csv`.
 * The final results dataset can be loaded into R using `targets::tar_read(results)`.
 
+### Statistical Modelling & Evaluation
+
+After compiling the raw results, the pipeline advances to a Bayesian multilevel modelling stage implemented with the `brms` package.
+
+* **Correctness model:** A binomial logistic model that estimates the probability of answering correctly as a function of `model_id`, `modality`, and their interaction, with varying (random-effect) intercepts for each question item.
+* **Parsing-quality model:** A multinomial ordinal model that captures the probabilities of responses being *clean*, *rescued*, or *failed*.
+* **Consistency model:** A multinomial model that measures how consistent a model's answers are across replications using categorical probabilities for options *B*, *C*, and *D*.
+
+All models use mildly regularising Student-t priors and an LKJ prior for correlation structures. Sampling is delegated to **CmdStanR** (configured via `mcmc_config`), and the number of cores/threads is automatically chosen based on the host machine.
+
+### Posterior Analysis
+
+Posterior draws from each model are extracted with `extract_posterior_draws()` and transformed into human-readable summaries with `tidybayes`. The pipeline computes:
+
+* Marginalised summaries by **model**, **modality**, and their **interaction**.
+* Three complementary consistency scores—scaled KL divergence, Simpson index, and modal probability—via `compute_consistency_kl()`, `compute_consistency_simpson()`, and `compute_consistency_modal()`.
+
+### Visualisation & Reporting
+
+Several helper targets turn the posterior summaries into publication-ready artefacts:
+
+* `plot_summaries()` – faceted forest plots for each metric (correctness, parsing, and the three consistency variants).
+* `plot_pareto_frontier()` – a two-objective plot that highlights trade-offs between correctness and consistency at the model level.
+* `create_summary_table()` + `save_gt_table()` – nicely formatted `gt` tables saved under `outputs/tables/` (e.g. `correctness.html`, `parsing.html`, `consistency.html`).
+
+### Correlation Analyses
+
+Finally, `compute_model_correlation()` explores relationships between metrics, for example the link between correctness and parsing quality, or correctness and KL-based consistency.
+
+All of the above steps are fully reproducible and automatically re-executed by **targets** whenever the underlying inputs change.
+
 ## Setup and Execution
 
 ### Installation
@@ -60,11 +91,9 @@ For each unique combination, in parallel, the pipeline:
 1. **Clone the Repository**:
 
    ```bash
-   git clone https://github.com/your-username/travel-medicine-llm-evaluation.git
-   cd travel-medicine-llm-evaluation
+   git clone https://github.com/bakaburg1/cthllm.git
+   cd cthllm
    ```
-
-   Replace `your-username` with the actual repository location.
 
 2. **Install Dependencies with `renv`**:
 
@@ -102,7 +131,7 @@ For each unique combination, in parallel, the pipeline:
     * If you encounter errors, especially during the LLM querying phase which runs in parallel by default, it can be helpful to run the pipeline sequentially in the main R process for easier debugging. Use:
 
       ```R
-      targets::tar_make(callr_function = NULL)
+      targets::tar_make(callr_function = NULL, use_crew = FALSE)
       ```
 
     * This allows you to check the status of each LLM query and use standard R debugging tools (like `browser()`) directly within the target steps.
