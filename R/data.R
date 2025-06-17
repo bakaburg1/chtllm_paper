@@ -491,6 +491,8 @@ compile_results_data <- function(
     results <- results |>
       dplyr::left_join(models, by = "model_id")
   }
+
+  results
 }
 
 #' Generate temp file name for a result
