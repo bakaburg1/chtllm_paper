@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+
+
+</head>
+<body>
+<div id="fauljoprho" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+  <style>#fauljoprho table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#fauljoprho thead, #fauljoprho tbody, #fauljoprho tfoot, #fauljoprho tr, #fauljoprho td, #fauljoprho th {
+  border-style: none;
+}
+
+#fauljoprho p {
+  margin: 0;
+  padding: 0;
+}
+
+#fauljoprho .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: 100%;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #000000;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#fauljoprho .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#fauljoprho .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#fauljoprho .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#fauljoprho .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#fauljoprho .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #000000;
+}
+
+#fauljoprho .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #000000;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#fauljoprho .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#fauljoprho .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#fauljoprho .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#fauljoprho .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#fauljoprho .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #000000;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#fauljoprho .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#fauljoprho .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#fauljoprho .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#fauljoprho .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#fauljoprho .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#fauljoprho .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#fauljoprho .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fauljoprho .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#fauljoprho .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#fauljoprho .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#fauljoprho .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fauljoprho .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#fauljoprho .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#fauljoprho .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fauljoprho .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fauljoprho .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#fauljoprho .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#fauljoprho .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#fauljoprho .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #000000;
+}
+
+#fauljoprho .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#fauljoprho .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fauljoprho .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#fauljoprho .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#fauljoprho .gt_left {
+  text-align: left;
+}
+
+#fauljoprho .gt_center {
+  text-align: center;
+}
+
+#fauljoprho .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#fauljoprho .gt_font_normal {
+  font-weight: normal;
+}
+
+#fauljoprho .gt_font_bold {
+  font-weight: bold;
+}
+
+#fauljoprho .gt_font_italic {
+  font-style: italic;
+}
+
+#fauljoprho .gt_super {
+  font-size: 65%;
+}
+
+#fauljoprho .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#fauljoprho .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#fauljoprho .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#fauljoprho .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#fauljoprho .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#fauljoprho .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#fauljoprho .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#fauljoprho .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#fauljoprho div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+  <table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+  <thead>
+    <tr class="gt_heading">
+      <td colspan="3" class="gt_heading gt_title gt_font_normal" style><span class='gt_from_md'><strong>Clean Parsing Rate</strong></span></td>
+    </tr>
+    <tr class="gt_heading">
+      <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style>Probability of responses being cleanly parsed (no fixes needed)</td>
+    </tr>
+    <tr class="gt_col_headings">
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col" id="model_id">Model</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="metric">Estimate</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1" scope="col" id="ci">95% CrI</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr class="gt_group_heading_row">
+      <th colspan="3" class="gt_group_heading" style="background-color: rgba(173,216,230,0.2);" scope="colgroup" id="cold">cold</th>
+    </tr>
+    <tr class="gt_row_group_first"><td headers="cold  model_id" class="gt_row gt_left">gemma-3</td>
+<td headers="cold  metric" class="gt_row gt_center">99.9%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.0% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">qwen2.5-coder-32b-instruct-mlx</td>
+<td headers="cold  metric" class="gt_row gt_center">99.9%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.1% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">llama-3.1-sonar-large</td>
+<td headers="cold  metric" class="gt_row gt_center">99.7%</td>
+<td headers="cold  ci" class="gt_row gt_center">98.3% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">gpt-4o-search</td>
+<td headers="cold  metric" class="gt_row gt_center">99.6%</td>
+<td headers="cold  ci" class="gt_row gt_center">98.3% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">groq-deepseek-r1-distill-llama-70b</td>
+<td headers="cold  metric" class="gt_row gt_center">99.2%</td>
+<td headers="cold  ci" class="gt_row gt_center">97.4% - 99.9%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">perplexity-sonar-reasoning</td>
+<td headers="cold  metric" class="gt_row gt_center">98.6%</td>
+<td headers="cold  ci" class="gt_row gt_center">96.4% - 99.6%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">mistral-large-2411</td>
+<td headers="cold  metric" class="gt_row gt_center">98.4%</td>
+<td headers="cold  ci" class="gt_row gt_center">96.0% - 99.5%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">groq-deepseek-r1-distill-qwen-32b</td>
+<td headers="cold  metric" class="gt_row gt_center">98.3%</td>
+<td headers="cold  ci" class="gt_row gt_center">96.0% - 99.5%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">qwen-qwq-32b</td>
+<td headers="cold  metric" class="gt_row gt_center">98.3%</td>
+<td headers="cold  ci" class="gt_row gt_center">95.9% - 99.5%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">deepseek-r1-distill-qwen-32b</td>
+<td headers="cold  metric" class="gt_row gt_center">97.3%</td>
+<td headers="cold  ci" class="gt_row gt_center">94.7% - 99.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">gpt-4o-mini-search</td>
+<td headers="cold  metric" class="gt_row gt_center">85.4%</td>
+<td headers="cold  ci" class="gt_row gt_center">80.6% - 89.6%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">r1-distill-qwen-1.5b@8bit</td>
+<td headers="cold  metric" class="gt_row gt_center">58.3%</td>
+<td headers="cold  ci" class="gt_row gt_center">51.9% - 64.6%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">r1-distill-qwen-1.5b@4bit</td>
+<td headers="cold  metric" class="gt_row gt_center">37.3%</td>
+<td headers="cold  ci" class="gt_row gt_center">31.0% - 43.7%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">chatgpt-4o-latest</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.3% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">claude-3.5-haiku</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">claude-3.5-sonnet</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">deepseek-chat</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.3% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">deepseek-r1</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.4% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">gemini-2.0-flash-exp</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.3% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">gemini-2.0-flash-thinking-exp</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.3% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">gemini-2.5-pro-exp</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.2% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">gpt-4o</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">gpt-4o-mini</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.5% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">groq-llama-3.1-8b-instant</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.8% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">groq-llama-3.3-70b-versatile</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">lfm-40b</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">lfm-7b</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">llama-4-maverick</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.5% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">llama-4-scout</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.4% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">mistral-small-3.1</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.4% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">ms-phi-4</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.4% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">o1</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.8% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">o1-mini</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.4% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">o3</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.8% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">o3-mini</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.7% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">o4-mini</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.8% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">qwen2.5-32b-instruct-mlx</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">qwen2.5-coder-1.5b-instruct-mlx@4bit</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">qwen2.5-coder-1.5b-instruct-mlx@8bit</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="cold  model_id" class="gt_row gt_left">xai-grok-2</td>
+<td headers="cold  metric" class="gt_row gt_center">100.0%</td>
+<td headers="cold  ci" class="gt_row gt_center">99.5% - 100.0%</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="3" class="gt_group_heading" style="background-color: rgba(255,185,15,0.2);" scope="colgroup" id="free">free</th>
+    </tr>
+    <tr class="gt_row_group_first"><td headers="free  model_id" class="gt_row gt_left">groq-llama-3.1-8b-instant</td>
+<td headers="free  metric" class="gt_row gt_center">99.9%</td>
+<td headers="free  ci" class="gt_row gt_center">98.8% - 100.0%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">lfm-40b</td>
+<td headers="free  metric" class="gt_row gt_center">98.0%</td>
+<td headers="free  ci" class="gt_row gt_center">95.5% - 99.4%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">claude-3.5-haiku</td>
+<td headers="free  metric" class="gt_row gt_center">94.9%</td>
+<td headers="free  ci" class="gt_row gt_center">91.5% - 97.4%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">claude-3.5-sonnet</td>
+<td headers="free  metric" class="gt_row gt_center">94.0%</td>
+<td headers="free  ci" class="gt_row gt_center">90.3% - 96.7%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">lfm-7b</td>
+<td headers="free  metric" class="gt_row gt_center">89.1%</td>
+<td headers="free  ci" class="gt_row gt_center">84.5% - 92.8%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">qwen2.5-coder-1.5b-instruct-mlx@4bit</td>
+<td headers="free  metric" class="gt_row gt_center">88.7%</td>
+<td headers="free  ci" class="gt_row gt_center">84.1% - 92.4%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">qwen2.5-coder-32b-instruct-mlx</td>
+<td headers="free  metric" class="gt_row gt_center">87.8%</td>
+<td headers="free  ci" class="gt_row gt_center">83.2% - 91.7%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">qwen2.5-coder-1.5b-instruct-mlx@8bit</td>
+<td headers="free  metric" class="gt_row gt_center">87.7%</td>
+<td headers="free  ci" class="gt_row gt_center">83.0% - 91.6%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">qwen2.5-32b-instruct-mlx</td>
+<td headers="free  metric" class="gt_row gt_center">86.8%</td>
+<td headers="free  ci" class="gt_row gt_center">82.1% - 90.8%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">groq-llama-3.3-70b-versatile</td>
+<td headers="free  metric" class="gt_row gt_center">84.9%</td>
+<td headers="free  ci" class="gt_row gt_center">79.7% - 89.3%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">gpt-4o</td>
+<td headers="free  metric" class="gt_row gt_center">81.5%</td>
+<td headers="free  ci" class="gt_row gt_center">76.1% - 86.2%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">gemini-2.0-flash-exp</td>
+<td headers="free  metric" class="gt_row gt_center">8.1%</td>
+<td headers="free  ci" class="gt_row gt_center">4.9% - 12.2%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">gpt-4o-mini</td>
+<td headers="free  metric" class="gt_row gt_center">69.1%</td>
+<td headers="free  ci" class="gt_row gt_center">62.8% - 74.8%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">xai-grok-2</td>
+<td headers="free  metric" class="gt_row gt_center">63.2%</td>
+<td headers="free  ci" class="gt_row gt_center">56.7% - 69.2%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">llama-4-maverick</td>
+<td headers="free  metric" class="gt_row gt_center">62.6%</td>
+<td headers="free  ci" class="gt_row gt_center">56.1% - 68.6%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">mistral-large-2411</td>
+<td headers="free  metric" class="gt_row gt_center">62.5%</td>
+<td headers="free  ci" class="gt_row gt_center">56.1% - 68.7%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">deepseek-r1-distill-qwen-32b</td>
+<td headers="free  metric" class="gt_row gt_center">58.0%</td>
+<td headers="free  ci" class="gt_row gt_center">51.9% - 64.3%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">ms-phi-4</td>
+<td headers="free  metric" class="gt_row gt_center">51.4%</td>
+<td headers="free  ci" class="gt_row gt_center">44.9% - 57.8%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">groq-deepseek-r1-distill-qwen-32b</td>
+<td headers="free  metric" class="gt_row gt_center">50.4%</td>
+<td headers="free  ci" class="gt_row gt_center">43.8% - 56.8%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">groq-deepseek-r1-distill-llama-70b</td>
+<td headers="free  metric" class="gt_row gt_center">48.4%</td>
+<td headers="free  ci" class="gt_row gt_center">42.2% - 54.8%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">gpt-4o-search</td>
+<td headers="free  metric" class="gt_row gt_center">48.1%</td>
+<td headers="free  ci" class="gt_row gt_center">41.7% - 54.6%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">llama-4-scout</td>
+<td headers="free  metric" class="gt_row gt_center">43.1%</td>
+<td headers="free  ci" class="gt_row gt_center">36.5% - 49.4%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">o1-mini</td>
+<td headers="free  metric" class="gt_row gt_center">41.0%</td>
+<td headers="free  ci" class="gt_row gt_center">34.8% - 47.4%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">gpt-4o-mini-search</td>
+<td headers="free  metric" class="gt_row gt_center">40.8%</td>
+<td headers="free  ci" class="gt_row gt_center">34.7% - 47.4%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">mistral-small-3.1</td>
+<td headers="free  metric" class="gt_row gt_center">35.8%</td>
+<td headers="free  ci" class="gt_row gt_center">29.7% - 42.4%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">llama-3.1-sonar-large</td>
+<td headers="free  metric" class="gt_row gt_center">31.4%</td>
+<td headers="free  ci" class="gt_row gt_center">25.7% - 37.7%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">deepseek-r1</td>
+<td headers="free  metric" class="gt_row gt_center">30.5%</td>
+<td headers="free  ci" class="gt_row gt_center">24.8% - 36.7%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">chatgpt-4o-latest</td>
+<td headers="free  metric" class="gt_row gt_center">23.2%</td>
+<td headers="free  ci" class="gt_row gt_center">17.9% - 29.0%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">qwen-qwq-32b</td>
+<td headers="free  metric" class="gt_row gt_center">21.3%</td>
+<td headers="free  ci" class="gt_row gt_center">16.3% - 26.9%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">gemini-2.5-pro-exp</td>
+<td headers="free  metric" class="gt_row gt_center">2.8%</td>
+<td headers="free  ci" class="gt_row gt_center">1.1% - 5.6%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">deepseek-chat</td>
+<td headers="free  metric" class="gt_row gt_center">18.9%</td>
+<td headers="free  ci" class="gt_row gt_center">14.0% - 24.6%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">r1-distill-qwen-1.5b@4bit</td>
+<td headers="free  metric" class="gt_row gt_center">15.5%</td>
+<td headers="free  ci" class="gt_row gt_center">11.1% - 20.7%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">r1-distill-qwen-1.5b@8bit</td>
+<td headers="free  metric" class="gt_row gt_center">12.6%</td>
+<td headers="free  ci" class="gt_row gt_center">8.6% - 17.4%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">gemini-2.0-flash-thinking-exp</td>
+<td headers="free  metric" class="gt_row gt_center">12.4%</td>
+<td headers="free  ci" class="gt_row gt_center">8.4% - 17.2%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">o1</td>
+<td headers="free  metric" class="gt_row gt_center">100.0%</td>
+<td headers="free  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">o3</td>
+<td headers="free  metric" class="gt_row gt_center">100.0%</td>
+<td headers="free  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">o3-mini</td>
+<td headers="free  metric" class="gt_row gt_center">100.0%</td>
+<td headers="free  ci" class="gt_row gt_center">99.6% - 100.0%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">o4-mini</td>
+<td headers="free  metric" class="gt_row gt_center">100.0%</td>
+<td headers="free  ci" class="gt_row gt_center">99.7% - 100.0%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">gemma-3</td>
+<td headers="free  metric" class="gt_row gt_center">0.0%</td>
+<td headers="free  ci" class="gt_row gt_center">0.0% - 0.7%</td></tr>
+    <tr><td headers="free  model_id" class="gt_row gt_left">perplexity-sonar-reasoning</td>
+<td headers="free  metric" class="gt_row gt_center">0.0%</td>
+<td headers="free  ci" class="gt_row gt_center">0.0% - 0.7%</td></tr>
+    <tr class="gt_group_heading_row">
+      <th colspan="3" class="gt_group_heading" style="background-color: rgba(139,0,0,0.2);" scope="colgroup" id="reasoning">reasoning</th>
+    </tr>
+    <tr class="gt_row_group_first"><td headers="reasoning  model_id" class="gt_row gt_left">lfm-40b</td>
+<td headers="reasoning  metric" class="gt_row gt_center">99.9%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">98.9% - 100.0%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">claude-3.5-sonnet</td>
+<td headers="reasoning  metric" class="gt_row gt_center">92.5%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">88.5% - 95.5%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">groq-llama-3.1-8b-instant</td>
+<td headers="reasoning  metric" class="gt_row gt_center">88.9%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">84.3% - 92.7%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">claude-3.5-haiku</td>
+<td headers="reasoning  metric" class="gt_row gt_center">88.1%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">83.4% - 92.0%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">qwen2.5-coder-1.5b-instruct-mlx@4bit</td>
+<td headers="reasoning  metric" class="gt_row gt_center">84.3%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">79.1% - 88.7%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">qwen2.5-32b-instruct-mlx</td>
+<td headers="reasoning  metric" class="gt_row gt_center">81.5%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">75.8% - 86.3%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">qwen2.5-coder-1.5b-instruct-mlx@8bit</td>
+<td headers="reasoning  metric" class="gt_row gt_center">75.8%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">70.0% - 81.0%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">groq-llama-3.3-70b-versatile</td>
+<td headers="reasoning  metric" class="gt_row gt_center">68.1%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">62.2% - 74.0%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">llama-4-maverick</td>
+<td headers="reasoning  metric" class="gt_row gt_center">68.0%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">61.7% - 73.9%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">qwen2.5-coder-32b-instruct-mlx</td>
+<td headers="reasoning  metric" class="gt_row gt_center">66.2%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">60.1% - 72.1%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">gpt-4o</td>
+<td headers="reasoning  metric" class="gt_row gt_center">65.7%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">59.3% - 71.8%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">ms-phi-4</td>
+<td headers="reasoning  metric" class="gt_row gt_center">6.6%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">3.8% - 10.6%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">lfm-7b</td>
+<td headers="reasoning  metric" class="gt_row gt_center">50.2%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">43.7% - 56.5%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">llama-4-scout</td>
+<td headers="reasoning  metric" class="gt_row gt_center">45.0%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">38.7% - 51.5%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">gemini-2.0-flash-exp</td>
+<td headers="reasoning  metric" class="gt_row gt_center">4.6%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">2.3% - 8.0%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">mistral-small-3.1</td>
+<td headers="reasoning  metric" class="gt_row gt_center">39.9%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">33.7% - 46.1%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">gpt-4o-mini</td>
+<td headers="reasoning  metric" class="gt_row gt_center">33.8%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">27.9% - 40.3%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">llama-3.1-sonar-large</td>
+<td headers="reasoning  metric" class="gt_row gt_center">27.5%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">21.8% - 33.5%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">gpt-4o-search</td>
+<td headers="reasoning  metric" class="gt_row gt_center">2.3%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">0.8% - 4.9%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">xai-grok-2</td>
+<td headers="reasoning  metric" class="gt_row gt_center">2.0%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">0.6% - 4.5%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">deepseek-chat</td>
+<td headers="reasoning  metric" class="gt_row gt_center">1.4%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">0.4% - 3.5%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">mistral-large-2411</td>
+<td headers="reasoning  metric" class="gt_row gt_center">1.1%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">0.2% - 3.1%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">chatgpt-4o-latest</td>
+<td headers="reasoning  metric" class="gt_row gt_center">0.9%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">0.2% - 2.8%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">gpt-4o-mini-search</td>
+<td headers="reasoning  metric" class="gt_row gt_center">0.3%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">0.0% - 1.6%</td></tr>
+    <tr><td headers="reasoning  model_id" class="gt_row gt_left">gemma-3</td>
+<td headers="reasoning  metric" class="gt_row gt_center">0.0%</td>
+<td headers="reasoning  ci" class="gt_row gt_center">0.0% - 0.3%</td></tr>
+  </tbody>
+  <tfoot class="gt_sourcenotes">
+    <tr>
+      <td class="gt_sourcenote" colspan="3"><span class='gt_from_md'>Summaries are posterior medians with 95% CrIs.</span></td>
+    </tr>
+  </tfoot>
+  
+</table>
+</div>
+</body>
+</html>
