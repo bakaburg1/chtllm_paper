@@ -692,62 +692,6 @@ list(
     )
   ),
 
-  # # Store summary tables
-  # tar_target(
-  #   correctness_tables_file,
-  #   {
-  #     file_path <- here::here("outputs", "correctness_summaries.rds")
-  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
-  #
-  #     summaries <- list(
-  #       by_model = summaries_correctness_by_model,
-  #       by_modality = summaries_correctness_by_modality,
-  #       interaction = summaries_correctness_interaction
-  #     )
-  #
-  #     saveRDS(summaries, file_path)
-  #     file_path
-  #   },
-  #   format = "file"
-  # ),
-  #
-  # tar_target(
-  #   parsing_tables_file,
-  #   {
-  #     file_path <- here::here("outputs", "parsing_summaries.rds")
-  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
-  #
-  #     summaries <- list(
-  #       by_model = summaries_parsing_by_model,
-  #       by_modality = summaries_parsing_by_modality,
-  #       interaction = summaries_parsing_interaction
-  #     )
-  #
-  #     saveRDS(summaries, file_path)
-  #     file_path
-  #   },
-  #   format = "file"
-  # ),
-  #
-  # tar_target(
-  #   consistency_tables_file,
-  #   {
-  #     file_path <- here::here("outputs", "consistency_summaries.rds")
-  #     dir.create(dirname(file_path), showWarnings = FALSE, recursive = TRUE)
-  #
-  #     summaries <- list(
-  #       by_model = summaries_consistency_by_model,
-  #       by_modality = summaries_consistency_by_modality,
-  #       interaction = summaries_consistency_interaction,
-  #       kl_divergence = kl_divergence_consistency
-  #     )
-  #
-  #     saveRDS(summaries, file_path)
-  #     file_path
-  #   },
-  #   format = "file"
-  # ),
-
   # Plotting ----------
 
   # Generate and store plots
@@ -802,7 +746,42 @@ list(
     plot_correctness_mosaic(summaries_correctness_by_model_item)
   ),
 
-  # Correlation analyses
+  tar_target(
+    pareto_frontier_plot,
+    plot_pareto_frontier(
+      correctness_summaries = summaries_correctness_by_model,
+      models_data = models
+    )
+  ),
+
+  tar_target(
+    plot_correctness_vs_parsing,
+    plot_performance_quadrants(
+      summary_x = summaries_correctness_by_model,
+      summary_y = summaries_parsing_by_model,
+      x_lab = "Correctness Probability",
+      y_lab = "Clean Parsing Probability",
+      title = "Model Performance: Correctness vs. Parsability",
+      x_name = "Correctness",
+      y_name = "Parsability"
+    )
+  ),
+
+  tar_target(
+    plot_correctness_vs_consistency_simpson,
+    plot_performance_quadrants(
+      summary_x = summaries_correctness_by_model,
+      summary_y = summaries_consistency_simpson_by_model,
+      x_lab = "Correctness Probability",
+      y_lab = "Consistency",
+      title = "Model Performance: Correctness vs. Consistency",
+      x_name = "Correctness",
+      y_name = "Consistency"
+    )
+  ),
+
+  # Correlation analyses ----------
+
   tar_target(
     correlation_correctness_parsing,
     compute_model_correlation(
@@ -837,15 +816,6 @@ list(
       model1_draws = draws_correctness,
       model2_draws = consistency_modal_draws,
       filter_parsing = FALSE
-    )
-  ),
-
-  # Pareto frontier analysis
-  tar_target(
-    pareto_frontier_plot,
-    plot_pareto_frontier(
-      correctness_summaries = summaries_correctness_by_model,
-      models_data = models
     )
   ),
 
