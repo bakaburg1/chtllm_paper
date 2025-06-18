@@ -427,3 +427,117 @@ plot_correctness_mosaic <- function(
       legend.position = "right"
     )
 }
+
+#' Plot model performance in quadrants
+#'
+#' Creates a scatter plot that categorizes models into four quadrants based on
+#' their performance on two different metrics (e.g., correctness vs.
+#' consistency). Models in extreme quartiles are labeled, while those in inner
+#' quartiles are more transparent.
+#'
+#' @param summary_x A data frame with model summaries for the x-axis metric.
+#'   Must contain `model_id` and a `.prob` column.
+#' @param summary_y A data frame with model summaries for the y-axis metric.
+#'   Must contain `model_id` and a `.prob` column.
+#' @param x_lab Label for the x-axis.
+#' @param y_lab Label for the y-axis.
+#' @param title The plot title.
+#' @param x_name Short name for the x-axis metric (for legend labels).
+#' @param y_name Short name for the y-axis metric (for legend labels).
+#'
+#' @return A ggplot object.
+#'
+#' @export
+plot_performance_quadrants <- function(
+    summary_x,
+    summary_y,
+    x_lab,
+    y_lab,
+    title,
+    x_name,
+    y_name
+) {
+
+  # Join datasets and prepare for plotting
+  plot_data <- summary_x |>
+    select("model_id", x_metric = ".prob") |>
+    left_join(
+      summary_y |> select("model_id", y_metric = ".prob"),
+      by = "model_id"
+    )
+
+  # Calculate medians and quartiles
+  median_x <- median(plot_data$x_metric, na.rm = TRUE)
+  median_y <- median(plot_data$y_metric, na.rm = TRUE)
+
+  # Create quadrant and labeling variables
+  plot_data <- plot_data |>
+    mutate(
+      quadrant = case_when(
+        .data$x_metric > median_x & .data$y_metric > median_y ~ "Top-Right",
+        .data$x_metric <= median_x & .data$y_metric > median_y ~ "Top-Left",
+        .data$x_metric <= median_x & .data$y_metric <= median_y ~ "Bottom-Left",
+        .default = "Bottom-Right"
+      ),
+      label = .data$model_id
+    )
+
+  # Define colors for quadrants
+  quadrant_colors <- c(
+    "Top-Right" = "darkgreen",
+    "Top-Left" = "orange",
+    "Bottom-Left" = "darkred",
+    "Bottom-Right" = "blue"
+  )
+
+  # Create descriptive labels for the legend
+  legend_labels <- c(
+    "Top-Right" = paste("High", x_name, "& High", y_name),
+    "Top-Left" = paste("Low", x_name, "& High", y_name),
+    "Bottom-Left" = paste("Low", x_name, "& Low", y_name),
+    "Bottom-Right" = paste("High", x_name, "& Low", y_name)
+  )
+
+  # Create the plot
+  ggplot(plot_data, aes(
+    x = .data$x_metric,
+    y = .data$y_metric,
+    color = .data$quadrant
+  )) +
+    geom_vline(xintercept = median_x, linetype = "dashed", alpha = 0.5) +
+    geom_hline(yintercept = median_y, linetype = "dashed", alpha = 0.5) +
+    geom_point(
+      size = 3
+    ) +
+    ggrepel::geom_text_repel(
+      aes(label = .data$label),
+      size = 3,
+      min.segment.length = 0,
+      box.padding = 0.3,
+      max.overlaps = 20,
+      force = 1.5,
+      show.legend = FALSE
+    ) +
+    scale_x_continuous(
+      trans = scales::logit_trans(),
+      breaks = \(x) {
+        seq_range(plot_data$x_metric, length.out = 8) |> round(3)
+      }
+    ) +
+    scale_y_continuous(
+      trans = scales::logit_trans(),
+      breaks = \(x) {
+        seq_range(plot_data$y_metric, length.out = 8) |> round(3)
+      }
+    ) +
+    scale_color_manual(values = quadrant_colors, labels = legend_labels) +
+    scale_alpha_identity() +
+    labs(
+      x = x_lab,
+      y = y_lab,
+      title = title,
+      subtitle = "Quadrants defined by median performance. Labels for models outside inner quartiles. Axes are on a logit scale.",
+      color = "Quadrant"
+    ) +
+    theme_minimal()
+}
