@@ -14,6 +14,6 @@ A tibble with counts for each answer option (A, B, C, D).
 }
 \description{
 Aggregates response choices (A, B, C, D) by item, model, and modality to
-create data suitable for multinomial consistency modeling. Excludes error
-and not-found responses.
+create data suitable for multinomial consistency modeling. Excludes error and
+not-found responses.
 }

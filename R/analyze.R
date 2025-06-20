@@ -5,7 +5,9 @@
 #' summarizes correct and total responses by item, model, and modality.
 #'
 #' @param results Raw results data from targets pipeline.
+#'
 #' @return A tibble with correct/total counts by item/model_id/modality.
+#'
 #' @export
 prepare_correctness_data <- function(results) {
   results |>
@@ -26,7 +28,9 @@ prepare_correctness_data <- function(results) {
 #' (direct answer).
 #'
 #' @param results Raw results data from targets pipeline.
+#'
 #' @return A tibble with counts for each parsing quality level.
+#'
 #' @export
 prepare_parsing_data <- function(results) {
   results |>
@@ -62,17 +66,19 @@ prepare_parsing_data <- function(results) {
 #' Prepare data for consistency model (multinomial)
 #'
 #' Aggregates response choices (A, B, C, D) by item, model, and modality to
-#' create data suitable for multinomial consistency modeling. Excludes error
-#' and not-found responses.
+#' create data suitable for multinomial consistency modeling. Excludes error and
+#' not-found responses.
 #'
 #' @param results Raw results data from targets pipeline.
+#'
 #' @return A tibble with counts for each answer option (A, B, C, D).
+#'
 #' @export
 prepare_consistency_data <- function(results) {
   results |>
     filter(!.data$status %in% c("E", "N")) |>
     mutate(
-      answer_clean = stringr::str_remove(.data$answer, "\\*+")
+      answer_clean = stringr::str_remove_all(.data$answer, "\\*")
     ) |>
     summarise(
       A = sum(.data$answer_clean == "A"),
@@ -96,12 +102,15 @@ prepare_consistency_data <- function(results) {
 #' Calculate consistency metrics from multinomial model
 #'
 #' Computes Shannon entropy and Simpson diversity metrics from a fitted
-#' multinomial consistency model to quantify response variability across
-#' model and modality combinations.
+#' multinomial consistency model to quantify response variability across model
+#' and modality combinations.
 #'
 #' @param model A fitted `brms` multinomial model.
+#'
 #' @return A tibble with entropy and Simpson diversity metrics.
+#'
 #' @importFrom tidybayes add_epred_draws median_qi
+#'
 #' @export
 calculate_consistency_metrics <- function(model) {
   rlang::check_installed("tidybayes")

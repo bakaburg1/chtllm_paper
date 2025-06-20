@@ -14,6 +14,6 @@ A tibble with entropy and Simpson diversity metrics.
 }
 \description{
 Computes Shannon entropy and Simpson diversity metrics from a fitted
-multinomial consistency model to quantify response variability across
-model and modality combinations.
+multinomial consistency model to quantify response variability across model
+and modality combinations.
 }
