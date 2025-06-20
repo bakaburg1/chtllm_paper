@@ -34,7 +34,7 @@ prepare_parsing_data <- function(results) {
     mutate(
       parse_category = case_when(
         .data$status == "N" ~ "none",
-        stringr::str_detect(.data$raw_response, "\\*") ~ "rescued",
+        stringr::str_detect(.data$answer, "\\*") ~ "rescued",
         .default = "clean"
       )
     ) |>
