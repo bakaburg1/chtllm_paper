@@ -402,6 +402,7 @@ list(
         chains = mcmc_config$chains,
         threads = brms::threading(mcmc_config$threads),
         file = file_path,
+        file_refit = "on_change",
         iter = mcmc_config$iter,
         warmup = mcmc_config$warmup,
         seed = mcmc_config$seed
@@ -445,6 +446,7 @@ list(
         chains = mcmc_config$chains,
         threads = brms::threading(mcmc_config$threads),
         file = file_path,
+        file_refit = "on_change",
         iter = mcmc_config$iter,
         warmup = mcmc_config$warmup,
         seed = mcmc_config$seed
@@ -493,6 +495,7 @@ list(
         chains = mcmc_config$chains,
         threads = brms::threading(mcmc_config$threads),
         file = file_path,
+        file_refit = "on_change",
         iter = mcmc_config$iter,
         warmup = mcmc_config$warmup,
         seed = mcmc_config$seed
