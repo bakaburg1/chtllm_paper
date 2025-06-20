@@ -99,51 +99,6 @@ prepare_consistency_data <- function(results) {
     )
 }
 
-#' Calculate consistency metrics from multinomial model
-#'
-#' Computes Shannon entropy and Simpson diversity metrics from a fitted
-#' multinomial consistency model to quantify response variability across model
-#' and modality combinations.
-#'
-#' @param model A fitted `brms` multinomial model.
-#'
-#' @return A tibble with entropy and Simpson diversity metrics.
-#'
-#' @importFrom tidybayes add_epred_draws median_qi
-#'
-#' @export
-calculate_consistency_metrics <- function(model) {
-  rlang::check_installed("tidybayes")
-
-  # Get predicted probabilities for each response option
-  ep <- model |>
-    tidybayes::add_epred_draws(
-      newdata = model$data |> mutate(total = 1),
-      value = ".prob",
-      ndraws = 100
-    )
-
-  # Calculate entropy (H) and Simpson diversity (S)
-  ep |>
-    ungroup() |>
-    summarise(
-      # Shannon entropy: higher = more diverse/inconsistent
-      H = -sum(.data$.prob * log(.data$.prob + 1e-10)),
-      # Simpson diversity: 1 - sum(p^2), higher = more diverse
-      S = 1 - sum(.data$.prob^2),
-      .by = c("model_id", "modality", "item", ".draw")
-    ) |>
-    # Average across items for each model/modality
-    summarise(
-      across(c("H", "S"), mean),
-      .by = c(".draw", "model_id", "modality")
-    ) |>
-    # Get posterior summaries
-    group_by(.data$model_id, .data$modality) |>
-    tidybayes::median_qi(.data$H, .data$S) |>
-    ungroup()
-}
-
 #' Extract posterior draws from fitted Bayesian models
 #'
 #' Extracts posterior draws from fitted brms models using tidybayes, with
