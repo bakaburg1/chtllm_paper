@@ -214,7 +214,9 @@ extract_posterior_draws <- function(
 #' needs.
 #'
 #' @param draws Output from extract_posterior_draws().
-#' @param group_vars Vector of variable names to group by for marginalization.
+#' @param marginalize_over Vector of variable names to marginalize over; the
+#'   posterior mean will be computed for each draw and each unique combination
+#'   of these variables. Defaults to `"model_id"`.
 #' @param summary_vars Variables to summarize (default: .prob).
 #' @param ci_width Credible interval width (default: 0.95).
 #'
@@ -223,7 +225,7 @@ extract_posterior_draws <- function(
 #' @export
 compute_marginalized_summaries <- function(
   draws,
-  group_vars,
+  marginalize_over = "model_id",
   summary_vars = NULL,
   ci_width = 0.95
 ) {
@@ -250,84 +252,92 @@ compute_marginalized_summaries <- function(
     summarise(
       # Marginalizing step
       across(all_of(summary_vars), mean),
-      .by = all_of(c(group_vars, ".draw"))
+      .by = all_of(c(marginalize_over, ".draw"))
     ) |>
-    group_by(pick(all_of(group_vars))) |>
+    group_by(pick(all_of(marginalize_over))) |>
     tidybayes::median_qi(!!!syms(summary_vars), .width = ci_width) |>
     ungroup()
 }
 
-#' Compute correlation between model predictions
+#' Compute posterior correlation with flexible marginalisation
 #'
-#' Calculates posterior correlation between predictions from different models,
-#' with optional filtering by parsing quality (e.g., "clean" responses only).
+#' Provides a unified engine for computing Spearman correlations between two
+#' sets of posterior draws, with optional marginalisation (averaging) over any
+#' combination of grouping variables – e.g. `"model_id"` (default),
+#' `c("model_id", "modality")`, or `c("item", "model_id", "modality")`.
 #'
-#' @param model1_draws Posterior draws from first model.
-#' @param model2_draws Posterior draws from second model.
-#' @param filter_parsing If TRUE, filter to clean parsing responses only.
-#' @param parsing_data Data with parsing classifications (if filter_parsing =
-#'   TRUE).
+#' For every posterior draw the function first collapses the probability
+#' (`.prob`) by the variables supplied in `marginalize_over`.  A correlation is
+#' then computed across the resulting rows (i.e. across the unique
+#' combinations of those variables).  Finally these per-draw correlations are
+#' summarised with `tidybayes::median_qi()`.
 #'
-#' @return A tibble with correlation posterior summaries.
+#' @param model1_draws,model2_draws Posterior draws for the two metrics to be
+#'   correlated.  Must contain `.prob`, `.draw`, and the columns listed in
+#'   `marginalize_over`.
+#' @param marginalize_over Character vector of variables to average over before
+#'   computing the correlation.  Defaults to `"model_id"` (i.e. between-model
+#'   correlation).
+#' @param filter_parsing Logical; if `TRUE` and either draw set contains a
+#'   `.category` column, only the `"clean"` category is kept (handy when one of
+#'   the metrics is parsing quality).
+#'
+#' @return A tibble with the posterior median correlation and its credible
+#'   interval.
 #'
 #' @export
-compute_model_correlation <- function(
+compute_marginalized_correlation <- function(
   model1_draws,
   model2_draws,
-  filter_parsing = FALSE,
-  parsing_data = NULL
+  marginalize_over = "model_id",
+  filter_parsing   = FALSE
 ) {
-  # Prepare data for correlation
-  if (filter_parsing && !is.null(parsing_data)) {
-    # Filter to combinations where clean parsing responses dominate
-    clean_responses <- parsing_data |>
-      filter(.data$clean > 0) |>
-      distinct(.data$item, .data$model_id, .data$modality)
+  rlang::check_installed("tidybayes")
 
-    model1_draws <- model1_draws |>
-      semi_join(clean_responses, by = c("item", "model_id", "modality"))
-
-    model2_draws <- model2_draws |>
-      semi_join(clean_responses, by = c("item", "model_id", "modality"))
+  # Optionally keep only clean parsing rows
+  keep_clean <- function(draws) {
+    if (".category" %in% names(draws)) {
+      draws |> dplyr::filter(.data$.category == "clean")
+    } else {
+      draws
+    }
   }
 
-  # Use .prob as metric column (consistent with extract_posterior_draws)
-  metric1 <- ".prob"
-  metric2 <- ".prob"
-
-  # Handle the parsing model by focusing on the "clean" category
-  if (".category" %in% names(model2_draws)) {
-    model2_draws <- model2_draws |>
-      filter(.data$.category == "clean")
+  if (filter_parsing) {
+    model1_draws <- keep_clean(model1_draws)
+    model2_draws <- keep_clean(model2_draws)
   }
 
-  if (".category" %in% names(model1_draws)) {
-    model1_draws <- model1_draws |>
-      filter(.data$.category == "clean")
+  # Helper to perform marginalisation
+  summarise_draws <- function(draws) {
+    if (is.null(marginalize_over) || length(marginalize_over) == 0) {
+      return(draws)
+    }
+
+    draws |>
+      dplyr::summarise(.prob = mean(.data$.prob), .by = all_of(c(marginalize_over, ".draw")))
   }
 
-  # Join draws by common grouping variables
-  join_vars <- intersect(
-    names(model1_draws),
-    c("item", "model_id", "modality", ".draw")
-  )
+  d1 <- summarise_draws(model1_draws) |> rename(prob1 = .data$.prob)
+  d2 <- summarise_draws(model2_draws) |> rename(prob2 = .data$.prob)
 
-  correlation_data <- model1_draws |>
-    select(all_of(c(join_vars, metric1))) |>
-    rename(metric1 = all_of(metric1)) |>
-    inner_join(
-      model2_draws |>
-        select(all_of(c(join_vars, metric2))) |>
-        rename(metric2 = all_of(metric2)),
-      by = join_vars
+  # Determine join variables
+  join_vars <- intersect(names(d1), names(d2))
+  join_vars <- setdiff(join_vars, c("prob1", "prob2"))
+
+  cor_by_draw <- d1 |>
+    dplyr::inner_join(d2, by = join_vars) |>
+    dplyr::summarise(
+      correlation = cor(
+        .data$prob1,
+        .data$prob2,
+        use    = "complete.obs",
+        method = "spearman"
+      ),
+      .by = ".draw"
     )
 
-  # Calculate correlations by draw
-  correlation_data |>
-    summarise(
-      correlation = cor(.data$metric1, .data$metric2, use = "complete.obs"),
-      .by = ".draw"
-    ) |>
+  cor_by_draw |>
     tidybayes::median_qi(.data$correlation)
 }
 
