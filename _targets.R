@@ -574,7 +574,7 @@ list(
     summaries_correctness_by_model,
     compute_marginalized_summaries(
       draws = draws_correctness,
-      group_vars = "model_id"
+      marginalize_over = "model_id"
     )
   ),
 
@@ -582,7 +582,7 @@ list(
     summaries_correctness_by_modality,
     compute_marginalized_summaries(
       draws = draws_correctness,
-      group_vars = "modality"
+      marginalize_over = "modality"
     )
   ),
 
@@ -590,7 +590,7 @@ list(
     summaries_correctness_interaction,
     compute_marginalized_summaries(
       draws = draws_correctness,
-      group_vars = c("model_id", "modality")
+      marginalize_over = c("model_id", "modality")
     )
   ),
 
@@ -598,7 +598,7 @@ list(
     summaries_correctness_by_model_item,
     compute_marginalized_summaries(
       draws = draws_correctness,
-      group_vars = c("model_id", "item")
+      marginalize_over = c("model_id", "item")
     )
   ),
 
@@ -606,7 +606,7 @@ list(
     summaries_parsing_by_model,
     compute_marginalized_summaries(
       draws = draws_parsing,
-      group_vars = "model_id"
+      marginalize_over = "model_id"
     )
   ),
 
@@ -614,7 +614,7 @@ list(
     summaries_parsing_by_modality,
     compute_marginalized_summaries(
       draws = draws_parsing,
-      group_vars = "modality"
+      marginalize_over = "modality"
     )
   ),
 
@@ -622,7 +622,7 @@ list(
     summaries_parsing_interaction,
     compute_marginalized_summaries(
       draws = draws_parsing,
-      group_vars = c("model_id", "modality")
+      marginalize_over = c("model_id", "modality")
     )
   ),
 
@@ -631,21 +631,21 @@ list(
     summaries_consistency_kl_by_model,
     compute_marginalized_summaries(
       draws = consistency_kl_draws,
-      group_vars = "model_id"
+      marginalize_over = "model_id"
     )
   ),
   tar_target(
     summaries_consistency_kl_by_modality,
     compute_marginalized_summaries(
       draws = consistency_kl_draws,
-      group_vars = "modality"
+      marginalize_over = "modality"
     )
   ),
   tar_target(
     summaries_consistency_kl_interaction,
     compute_marginalized_summaries(
       draws = consistency_kl_draws,
-      group_vars = c("model_id", "modality")
+      marginalize_over = c("model_id", "modality")
     )
   ),
 
@@ -654,21 +654,21 @@ list(
     summaries_consistency_simpson_by_model,
     compute_marginalized_summaries(
       draws = consistency_simpson_draws,
-      group_vars = "model_id"
+      marginalize_over = "model_id"
     )
   ),
   tar_target(
     summaries_consistency_simpson_by_modality,
     compute_marginalized_summaries(
       draws = consistency_simpson_draws,
-      group_vars = "modality"
+      marginalize_over = "modality"
     )
   ),
   tar_target(
     summaries_consistency_simpson_interaction,
     compute_marginalized_summaries(
       draws = consistency_simpson_draws,
-      group_vars = c("model_id", "modality")
+      marginalize_over = c("model_id", "modality")
     )
   ),
 
@@ -677,21 +677,21 @@ list(
     summaries_consistency_modal_by_model,
     compute_marginalized_summaries(
       draws = consistency_modal_draws,
-      group_vars = "model_id"
+      marginalize_over = "model_id"
     )
   ),
   tar_target(
     summaries_consistency_modal_by_modality,
     compute_marginalized_summaries(
       draws = consistency_modal_draws,
-      group_vars = "modality"
+      marginalize_over = "modality"
     )
   ),
   tar_target(
     summaries_consistency_modal_interaction,
     compute_marginalized_summaries(
       draws = consistency_modal_draws,
-      group_vars = c("model_id", "modality")
+      marginalize_over = c("model_id", "modality")
     )
   ),
 
@@ -792,6 +792,17 @@ list(
       model2_draws = draws_parsing,
       filter_parsing = TRUE,
       parsing_data = data_parsing
+    )
+  ),
+
+  # Model-level correlation (marginalised over item & modality) ----------
+
+  tar_target(
+    correlation_correctness_parsing_model,
+    compute_model_level_correlation(
+      model1_draws = draws_correctness,
+      model2_draws = draws_parsing,
+      filter_parsing = TRUE
     )
   ),
 
