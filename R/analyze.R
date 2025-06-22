@@ -20,83 +20,76 @@ prepare_correctness_data <- function(results) {
     filter(.data$total > 0)
 }
 
-#' Prepare data for parsing model (multinomial)
+#' Prepare data for parsing model (ordinal)
 #'
-#' Aggregates parsing quality levels (none, rescued, clean) by item, model, and
-#' modality to create data suitable for multinomial parsing modeling. Classifies
-#' responses as "none" (not found), "rescued" (required cleaning), or "clean"
-#' (direct answer).
+#' Converts each LLM response to an ordered parsing‐quality outcome suitable for
+#' an **ordered logit** model. Responses are classified as:
 #'
-#' @param results Raw results data from targets pipeline.
+#' * `none`    – the answer could **not** be parsed (`status == "N"`).
+#' * `rescued` – the answer required a fix (an asterisk `*` detected).
+#' * `clean`   – the answer was parsed without changes.
 #'
-#' @return A tibble with counts for each parsing quality level.
+#' The returned data contains **one row per response** with an ordered factor
+#' `y` (levels `none < rescued < clean`) plus the grouping variables used in the
+#' model (`item`, `model_id`, `modality`).
+#'
+#' @param results Raw results data from the targets pipeline.
+#'
+#' @return A tibble with columns `item`, `model_id`, `modality`, and the ordered
+#'   response variable `y`.
 #'
 #' @export
 prepare_parsing_data <- function(results) {
+  # Map each result to an ordered parsing quality factor (none < rescued <
+  # clean).
+
+  # This produces one row per LLM response, which is required for fitting an
+  # ordered‐logit model in **brms**. The returned tibble contains the ordered
+  # outcome `y` and the predictors used in the model.
+
+  # Define the ordered levels once to avoid repetition
+  levels_ordered <- c("none", "rescued", "clean")
+
   results |>
-    filter(.data$status != "E") |>
-    mutate(
-      parse_category = case_when(
+    dplyr::filter(!.data$status %in% "E") |>
+    dplyr::mutate(
+      parse_category = dplyr::case_when(
         .data$status == "N" ~ "none",
         stringr::str_detect(.data$answer, "\\*") ~ "rescued",
         .default = "clean"
-      )
-    ) |>
-    summarise(
-      none = NA_real_,
-      rescued = NA_real_,
-      clean = NA_real_,
-      across(
-        c("none", "rescued", "clean"),
-        ~ sum(.data$parse_category == cur_column())
       ),
-      total = n(),
-      .by = c("item", "model_id", "modality")
+      # Convert to an **ordered** factor so that brms treats it as ordinal.
+      y = factor(parse_category, levels = levels_ordered, ordered = TRUE)
     ) |>
-    filter(.data$total > 0) |>
-    mutate(
-      y = cbind(
-        none = .data$none,
-        rescued = .data$rescued,
-        clean = .data$clean
-      )
-    )
+    dplyr::select("item", "model_id", "modality", "y")
 }
 
-#' Prepare data for consistency model (multinomial)
+#' Prepare data for consistency model (binomial)
 #'
-#' Aggregates response choices (A, B, C, D) by item, model, and modality to
-#' create data suitable for multinomial consistency modeling. Excludes error and
-#' not-found responses.
+#' Aggregates results to compute, for each (item, model, modality) cell, the
+#' number of *distinct* answers produced (`y`) out of the total number of
+#' responses (`total`). A value of `y = 1` indicates perfect consistency (the
+#' model always produced the same answer), while larger values indicate lower
+#' consistency. Error (`"E"`) and not-found (`"N"`) records are excluded.
 #'
 #' @param results Raw results data from targets pipeline.
 #'
-#' @return A tibble with counts for each answer option (A, B, C, D).
+#' @return A tibble with columns `item`, `model_id`, `modality`, `y`, and
+#'   `total`, suitable for fitting a binomial model via `y | trials(total)`.
 #'
 #' @export
 prepare_consistency_data <- function(results) {
   results |>
-    filter(!.data$status %in% c("E", "N")) |>
-    mutate(
-      answer_clean = stringr::str_remove_all(.data$answer, "\\*")
+    dplyr::filter(!.data$status %in% c("E", "N")) |>
+    dplyr::mutate(
+      answer = stringr::str_remove_all(.data$answer, "\\*")
     ) |>
-    summarise(
-      A = sum(.data$answer_clean == "A"),
-      B = sum(.data$answer_clean == "B"),
-      C = sum(.data$answer_clean == "C"),
-      D = sum(.data$answer_clean == "D"),
-      total = n(),
+    dplyr::summarise(
+      y = dplyr::n_distinct(.data$answer),
+      total = dplyr::n(),
       .by = c("item", "model_id", "modality")
     ) |>
-    filter(.data$total > 0) |>
-    mutate(
-      y = cbind(
-        A = .data$A,
-        B = .data$B,
-        C = .data$C,
-        D = .data$D
-      )
-    )
+    dplyr::filter(.data$total > 0)
 }
 
 #' Extract posterior draws from fitted Bayesian models
@@ -129,7 +122,7 @@ extract_posterior_draws <- function(
 ) {
   # Prepare newdata based on model type
   newdata <- model$data |>
-    select("item", "model_id", "modality") |>
+    select("item", "model_id", "modality", any_of(c("total"))) |>
     distinct() |>
     mutate(total = 1)
 
@@ -196,8 +189,7 @@ compute_marginalized_summaries <- function(
   }
 
   # Special handling for parsing data: focus on "clean" category only
-  if (".category" %in% names(draws) &&
-      "clean" %in% unique(draws$.category)) {
+  if (".category" %in% names(draws) && "clean" %in% unique(draws$.category)) {
     draws <- draws |>
       filter(.data$.category == "clean")
   }
@@ -222,20 +214,17 @@ compute_marginalized_summaries <- function(
 #' `c("model_id", "modality")`, or `c("item", "model_id", "modality")`.
 #'
 #' For every posterior draw the function first collapses the probability
-#' (`.prob`) by the variables supplied in `marginalize_over`.  A correlation is
-#' then computed across the resulting rows (i.e. across the unique
-#' combinations of those variables).  Finally these per-draw correlations are
-#' summarised with `tidybayes::median_qi()`.
+#' (`.prob`) by the variables supplied in `marginalize_over`. A correlation is
+#' then computed across the resulting rows (i.e. across the unique combinations
+#' of those variables). Finally these per-draw correlations are summarised with
+#' `tidybayes::median_qi()`.
 #'
 #' @param model1_draws,model2_draws Posterior draws for the two metrics to be
-#'   correlated.  Must contain `.prob`, `.draw`, and the columns listed in
+#'   correlated. Must contain `.prob`, `.draw`, and the columns listed in
 #'   `marginalize_over`.
 #' @param marginalize_over Character vector of variables to average over before
-#'   computing the correlation.  Defaults to `"model_id"` (i.e. between-model
+#'   computing the correlation. Defaults to `"model_id"` (i.e. between-model
 #'   correlation).
-#' @param filter_parsing Logical; if `TRUE` and either draw set contains a
-#'   `.category` column, only the `"clean"` category is kept (handy when one of
-#'   the metrics is parsing quality).
 #'
 #' @return A tibble with the posterior median correlation and its credible
 #'   interval.
@@ -244,11 +233,8 @@ compute_marginalized_summaries <- function(
 compute_marginalized_correlation <- function(
   model1_draws,
   model2_draws,
-  marginalize_over = "model_id",
-  filter_parsing   = FALSE
+  marginalize_over = "model_id"
 ) {
-  rlang::check_installed("tidybayes")
-
   # Optionally keep only clean parsing rows
   keep_clean <- function(draws) {
     if (".category" %in% names(draws)) {
@@ -258,10 +244,8 @@ compute_marginalized_correlation <- function(
     }
   }
 
-  if (filter_parsing) {
-    model1_draws <- keep_clean(model1_draws)
-    model2_draws <- keep_clean(model2_draws)
-  }
+  model1_draws <- keep_clean(model1_draws)
+  model2_draws <- keep_clean(model2_draws)
 
   # Helper to perform marginalisation
   summarise_draws <- function(draws) {
@@ -270,11 +254,16 @@ compute_marginalized_correlation <- function(
     }
 
     draws |>
-      dplyr::summarise(.prob = mean(.data$.prob), .by = all_of(c(marginalize_over, ".draw")))
+      dplyr::summarise(
+        .prob = mean(.data$.prob),
+        .by = dplyr::all_of(c(marginalize_over, ".draw"))
+      )
   }
 
-  d1 <- summarise_draws(model1_draws) |> rename(prob1 = .data$.prob)
-  d2 <- summarise_draws(model2_draws) |> rename(prob2 = .data$.prob)
+  d1 <- summarise_draws(model1_draws) |>
+    dplyr::rename(prob1 = .data$.prob)
+  d2 <- summarise_draws(model2_draws) |>
+    dplyr::rename(prob2 = .data$.prob)
 
   # Determine join variables
   join_vars <- intersect(names(d1), names(d2))
@@ -286,7 +275,7 @@ compute_marginalized_correlation <- function(
       correlation = cor(
         .data$prob1,
         .data$prob2,
-        use    = "complete.obs",
+        use = "complete.obs",
         method = "spearman"
       ),
       .by = ".draw"

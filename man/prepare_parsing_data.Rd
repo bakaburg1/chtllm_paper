@@ -2,19 +2,29 @@
 % Please edit documentation in R/analyze.R
 \name{prepare_parsing_data}
 \alias{prepare_parsing_data}
-\title{Prepare data for parsing model (multinomial)}
+\title{Prepare data for parsing model (ordinal)}
 \usage{
 prepare_parsing_data(results)
 }
 \arguments{
-\item{results}{Raw results data from targets pipeline.}
+\item{results}{Raw results data from the targets pipeline.}
 }
 \value{
-A tibble with counts for each parsing quality level.
+A tibble with columns \code{item}, \code{model_id}, \code{modality}, and the ordered
+response variable \code{y}.
 }
 \description{
-Aggregates parsing quality levels (none, rescued, clean) by item, model, and
-modality to create data suitable for multinomial parsing modeling. Classifies
-responses as "none" (not found), "rescued" (required cleaning), or "clean"
-(direct answer).
+Converts each LLM response to an ordered parsing‐quality outcome suitable for
+an \strong{ordered logit} model. Responses are classified as:
+}
+\details{
+\itemize{
+\item \code{none}    – the answer could \strong{not} be parsed (\code{status == "N"}).
+\item \code{rescued} – the answer required a fix (an asterisk \code{*} detected).
+\item \code{clean}   – the answer was parsed without changes.
+}
+
+The returned data contains \strong{one row per response} with an ordered factor
+\code{y} (levels \verb{none < rescued < clean}) plus the grouping variables used in the
+model (\code{item}, \code{model_id}, \code{modality}).
 }

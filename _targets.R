@@ -53,6 +53,7 @@ list(
     here::here("inst", "benchmark_travel_medicine.csv"),
     format = "file"
   ),
+
   tar_target(
     models_file,
     here::here("inst", "models.csv"),
@@ -98,6 +99,12 @@ list(
   tar_target(
     reprocess_status,
     c("E") # E = ERROR
+  ),
+
+  # Define the set of possible answer choices and count them
+  tar_target(
+    answer_options,
+    c("A", "B", "C", "D")
   ),
 
   # Define which questions to process, 1:42 is all of them
@@ -416,29 +423,21 @@ list(
   tar_target(
     fit_parsing,
     {
+      # Priors suitable for an ordered logit model
       priors <- c(
-        # LKJ prior for correlation matrices
+        # LKJ prior for correlation matrices (random effects)
         brms::prior(lkj(2), class = "cor"),
-        # Random-effect SDs for item intercepts
-        brms::prior(
-          student_t(3, 0, 1.5),
-          class = "sd",
-          dpar = "muclean"
-        ),
-        brms::prior(
-          student_t(3, 0, 1.5),
-          class = "sd",
-          dpar = "murescued"
-        )
+        # Random-effect standard deviations
+        brms::prior(student_t(3, 0, 1.5), class = "sd")
       )
 
       file_path <- file.path(models_dir, "fit_parsing.rds")
 
-      message("Fitting parsing model...")
+      message("Fitting parsing model (ordered logit)...")
 
       brms::brm(
-        formula = y | trials(total) ~ 0 + (modality | model_id) + (1 | item),
-        family = multinomial(),
+        formula = y ~ (modality | model_id) + (1 | item),
+        family = brms::cumulative("logit"),
         data = data_parsing,
         prior = priors,
         backend = mcmc_config$backend,
@@ -464,21 +463,7 @@ list(
         # LKJ prior for correlation matrices
         brms::prior(lkj(2), class = "cor"),
         # Random-effect SDs for item intercepts
-        brms::prior(
-          student_t(3, 0, 1.5),
-          class = "sd",
-          dpar = "muB"
-        ),
-        brms::prior(
-          student_t(3, 0, 1.5),
-          class = "sd",
-          dpar = "muC"
-        ),
-        brms::prior(
-          student_t(3, 0, 1.5),
-          class = "sd",
-          dpar = "muD"
-        )
+        brms::prior(student_t(3, 0, 1.5), class = "sd")
       )
 
       file_path <- file.path(models_dir, "fit_consistency.rds")
@@ -487,7 +472,7 @@ list(
 
       brms::brm(
         formula = y | trials(total) ~ 0 + (modality | model_id) + (1 | item),
-        family = multinomial(),
+        family = binomial(),
         data = data_consistency,
         prior = priors,
         backend = mcmc_config$backend,
@@ -531,42 +516,50 @@ list(
     draws_parsing,
     {
       options(mc.cores = parallel::detectCores())
-      extract_posterior_draws(
+
+      # Step 1: obtain category-level probabilities from the ordinal model
+      raw_draws <- extract_posterior_draws(
         model = readRDS(fit_parsing),
         ndraws = posterior_draws,
         seed = mcmc_config$seed
       )
+
+      # Step 2: collapse category-level probabilities into the expected score
+      if (".category" %in% names(raw_draws)) {
+        scoring <- c("none" = 0L, "rescued" = 1L, "clean" = 2L)
+
+        processed_draws <- raw_draws |>
+          dplyr::mutate(
+            score = scoring[as.character(.data$.category)]
+          ) |>
+          dplyr::summarise(
+            .prob = sum(.prob * score),
+            .by = c("item", "model_id", "modality", ".draw")
+          )
+      } else {
+        processed_draws <- raw_draws
+      }
+
+      # Step 3: rescale to the 0-1 interval (divide by max score = 2)
+      processed_draws <- processed_draws |>
+        dplyr::mutate(.prob = .prob / 2)
+
+      processed_draws
     }
   ),
 
+  # Extract posterior draws for consistency model (scaled)
   tar_target(
     draws_consistency,
     {
       options(mc.cores = parallel::detectCores())
-
-      # Extract raw posterior draws
       extract_posterior_draws(
         model = readRDS(fit_consistency),
         ndraws = posterior_draws,
         seed = mcmc_config$seed
-      )
+      ) |>
+        dplyr::mutate(.prob = 1 - .prob / length(answer_options))
     }
-  ),
-
-  # Per-question consistency scores
-  tar_target(
-    consistency_kl_draws,
-    compute_consistency_kl(draws_consistency)
-  ),
-
-  tar_target(
-    consistency_simpson_draws,
-    compute_consistency_simpson(draws_consistency)
-  ),
-
-  tar_target(
-    consistency_modal_draws,
-    compute_consistency_modal(draws_consistency)
   ),
 
   # Marginalized summaries for each model
@@ -626,71 +619,27 @@ list(
     )
   ),
 
-  # KL Divergence Summaries
+  # Consistency Summaries
   tar_target(
-    summaries_consistency_kl_by_model,
+    summaries_consistency_by_model,
     compute_marginalized_summaries(
-      draws = consistency_kl_draws,
+      draws = draws_consistency,
       marginalize_over = "model_id"
-    )
-  ),
-  tar_target(
-    summaries_consistency_kl_by_modality,
-    compute_marginalized_summaries(
-      draws = consistency_kl_draws,
-      marginalize_over = "modality"
-    )
-  ),
-  tar_target(
-    summaries_consistency_kl_interaction,
-    compute_marginalized_summaries(
-      draws = consistency_kl_draws,
-      marginalize_over = c("model_id", "modality")
     )
   ),
 
-  # Simpson Index Summaries
   tar_target(
-    summaries_consistency_simpson_by_model,
+    summaries_consistency_by_modality,
     compute_marginalized_summaries(
-      draws = consistency_simpson_draws,
-      marginalize_over = "model_id"
-    )
-  ),
-  tar_target(
-    summaries_consistency_simpson_by_modality,
-    compute_marginalized_summaries(
-      draws = consistency_simpson_draws,
+      draws = draws_consistency,
       marginalize_over = "modality"
-    )
-  ),
-  tar_target(
-    summaries_consistency_simpson_interaction,
-    compute_marginalized_summaries(
-      draws = consistency_simpson_draws,
-      marginalize_over = c("model_id", "modality")
     )
   ),
 
-  # Modal Probability Summaries
   tar_target(
-    summaries_consistency_modal_by_model,
+    summaries_consistency_interaction,
     compute_marginalized_summaries(
-      draws = consistency_modal_draws,
-      marginalize_over = "model_id"
-    )
-  ),
-  tar_target(
-    summaries_consistency_modal_by_modality,
-    compute_marginalized_summaries(
-      draws = consistency_modal_draws,
-      marginalize_over = "modality"
-    )
-  ),
-  tar_target(
-    summaries_consistency_modal_interaction,
-    compute_marginalized_summaries(
-      draws = consistency_modal_draws,
+      draws = draws_consistency,
       marginalize_over = c("model_id", "modality")
     )
   ),
@@ -718,29 +667,11 @@ list(
   ),
 
   tar_target(
-    consistency_kl_plots,
+    consistency_plots,
     plot_summaries(
-      summaries = summaries_consistency_kl_interaction,
-      metric_name = "KL consistency",
-      y_label = "Consistency (KL Divergence)"
-    )
-  ),
-
-  tar_target(
-    consistency_simpson_plots,
-    plot_summaries(
-      summaries = summaries_consistency_simpson_interaction,
-      metric_name = "Simpson consistency",
-      y_label = "Consistency (Simpson Index)"
-    )
-  ),
-
-  tar_target(
-    consistency_modal_plots,
-    plot_summaries(
-      summaries = summaries_consistency_modal_interaction,
-      metric_name = "Modal consistency",
-      y_label = "Consistency (Modal Probability)"
+      summaries = summaries_consistency_interaction,
+      metric_name = "consistency",
+      y_label = "Consistency"
     )
   ),
 
@@ -771,10 +702,10 @@ list(
   ),
 
   tar_target(
-    plot_correctness_vs_consistency_simpson,
+    plot_correctness_vs_consistency,
     plot_performance_quadrants(
       summary_x = summaries_correctness_by_model,
-      summary_y = summaries_consistency_simpson_by_model,
+      summary_y = summaries_consistency_by_model,
       x_lab = "Correctness Probability",
       y_lab = "Consistency",
       title = "Model Performance: Correctness vs. Consistency",
@@ -787,49 +718,19 @@ list(
 
   tar_target(
     correlation_correctness_parsing,
-    compute_model_correlation(
+    compute_marginalized_correlation(
       model1_draws = draws_correctness,
       model2_draws = draws_parsing,
-      filter_parsing = TRUE,
-      parsing_data = data_parsing
-    )
-  ),
-
-  # Model-level correlation (marginalised over item & modality) ----------
-
-  tar_target(
-    correlation_correctness_parsing_model,
-    compute_model_level_correlation(
-      model1_draws = draws_correctness,
-      model2_draws = draws_parsing,
-      filter_parsing = TRUE
+      marginalize_over = "model_id"
     )
   ),
 
   tar_target(
-    correlation_correctness_consistency_kl,
-    compute_model_correlation(
+    correlation_correctness_consistency,
+    compute_marginalized_correlation(
       model1_draws = draws_correctness,
-      model2_draws = consistency_kl_draws,
-      filter_parsing = FALSE
-    )
-  ),
-
-  tar_target(
-    correlation_correctness_consistency_simpson,
-    compute_model_correlation(
-      model1_draws = draws_correctness,
-      model2_draws = consistency_simpson_draws,
-      filter_parsing = FALSE
-    )
-  ),
-
-  tar_target(
-    correlation_correctness_consistency_modal,
-    compute_model_correlation(
-      model1_draws = draws_correctness,
-      model2_draws = consistency_modal_draws,
-      filter_parsing = FALSE
+      model2_draws = draws_consistency,
+      marginalize_over = "model_id"
     )
   ),
 
@@ -861,9 +762,9 @@ list(
   tar_target(
     table_consistency,
     create_summary_table(
-      summaries = summaries_consistency_kl_interaction,
+      summaries = summaries_consistency_interaction,
       metric_name = ".prob",
-      title = "Response Consistency (Scaled KL Divergence)",
+      title = "Response Consistency",
       subtitle = "Score of 1 is perfect consistency, 0 is uniform inconsistency",
       source_note = "Summaries are posterior medians with 95% CrIs.",
       group_by_var = "modality"

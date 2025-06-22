@@ -6,7 +6,7 @@
 \usage{
 compute_marginalized_summaries(
   draws,
-  group_vars,
+  marginalize_over = "model_id",
   summary_vars = NULL,
   ci_width = 0.95
 )
@@ -14,7 +14,9 @@ compute_marginalized_summaries(
 \arguments{
 \item{draws}{Output from extract_posterior_draws().}
 
-\item{group_vars}{Vector of variable names to group by for marginalization.}
+\item{marginalize_over}{Vector of variable names to marginalize over; the
+posterior mean will be computed for each draw and each unique combination
+of these variables. Defaults to \code{"model_id"}.}
 
 \item{summary_vars}{Variables to summarize (default: .prob).}
 
