@@ -40,4 +40,3 @@ seq_range(c(10, 1, 5, 3), by = 2)
 }
 
 }
-\keyword{internal}

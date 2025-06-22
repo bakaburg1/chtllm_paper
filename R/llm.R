@@ -7,7 +7,7 @@
 #'
 #' @export
 generate_system_prompt <- function(
-    modality = c("cold", "free", "reasoning")
+  modality = c("cold", "free", "reasoning")
 ) {
   modality <- match.arg(modality)
   common_prompt <- "You are an AI expert in medical travel health answering multiple choice questions."
@@ -150,8 +150,8 @@ extract_answer <- function(response) {
 #'
 #' @export
 query_llm <- function(
-    message,
-    model_config
+  message,
+  model_config
 ) {
   # If model_config is a string, treat it as a model_id and load the config
   if (is.character(model_config) && length(model_config) == 1) {
@@ -190,7 +190,7 @@ query_llm <- function(
 
   if (
     model_config$model_type == "reasoning" &&
-    model_config$provider == "openrouter"
+      model_config$provider == "openrouter"
   ) {
     model_params$include_reasoning <- TRUE
   }
@@ -213,8 +213,8 @@ query_llm <- function(
 
   if (
     model_config$provider == "openai" &&
-    grepl("^o\\d-", model_config$model)) {
-
+      grepl("^o\\d-", model_config$model)
+  ) {
     # OpenAI o-series models don't support temperature different from 1
     if (!is.null(base_params$api_args)) {
       base_params$api_args$temperature <- 1
@@ -256,10 +256,10 @@ query_llm <- function(
 
         if (
           error$code %in%
-          c(
-            "unknown_parameter",
-            "unsupported_parameter"
-          )
+            c(
+              "unknown_parameter",
+              "unsupported_parameter"
+            )
         ) {
           retry <- TRUE
           model_params[error$param] <- NULL

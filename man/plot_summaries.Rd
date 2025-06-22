@@ -4,7 +4,12 @@
 \alias{plot_summaries}
 \title{Create comprehensive summary plots}
 \usage{
-plot_summaries(summaries, metric_name, y_transform = NULL, y_label = NULL)
+plot_summaries(
+  summaries,
+  metric_name = NULL,
+  y_transform = NULL,
+  y_label = NULL
+)
 }
 \arguments{
 \item{summaries}{Output from compute_marginalized_summaries().}

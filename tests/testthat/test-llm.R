@@ -117,7 +117,7 @@ test_that("query_llm works with different modalities", {
   for (modality in modalities) {
     # Set system prompt for the modality
     model_config$system_prompt <- generate_system_prompt(modality)
-    
+
     result <- query_llm(message, model_config)
 
     # Basic structure checks

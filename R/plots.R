@@ -13,13 +13,11 @@
 #'
 #' @export
 plot_summaries <- function(
-    summaries,
-    metric_name,
-    y_transform = NULL,
-    y_label = NULL
+  summaries,
+  metric_name = NULL,
+  y_transform = NULL,
+  y_label = NULL
 ) {
-  rlang::check_installed(c("ggplot2", "forcats", "scales"))
-
   # Color palette for modalities
   pal <- c(
     cold = "lightblue",
@@ -189,10 +187,9 @@ plot_summaries <- function(
 #'
 #' @export
 plot_pareto_frontier <- function(
-    correctness_summaries,
-    models_data
+  correctness_summaries,
+  models_data
 ) {
-
   # Prepare data by joining correctness with cost information
   plot_data <- correctness_summaries |>
     inner_join(
@@ -364,8 +361,8 @@ plot_pareto_frontier <- function(
 #' @return A ggplot object.
 #' @export
 plot_correctness_mosaic <- function(
-    correctness_summaries,
-    min_alpha = 0.25
+  correctness_summaries,
+  min_alpha = 0.25
 ) {
   # Reorder models by average correctness (worst on top, best at bottom)
   model_order <- correctness_summaries |>
@@ -449,15 +446,14 @@ plot_correctness_mosaic <- function(
 #'
 #' @export
 plot_performance_quadrants <- function(
-    summary_x,
-    summary_y,
-    x_lab,
-    y_lab,
-    title,
-    x_name,
-    y_name
+  summary_x,
+  summary_y,
+  x_lab,
+  y_lab,
+  title,
+  x_name,
+  y_name
 ) {
-
   # Join datasets and prepare for plotting
   plot_data <- summary_x |>
     select("model_id", x_metric = ".prob") |>
@@ -499,11 +495,14 @@ plot_performance_quadrants <- function(
   )
 
   # Create the plot
-  ggplot(plot_data, aes(
-    x = .data$x_metric,
-    y = .data$y_metric,
-    color = .data$quadrant
-  )) +
+  ggplot(
+    plot_data,
+    aes(
+      x = .data$x_metric,
+      y = .data$y_metric,
+      color = .data$quadrant
+    )
+  ) +
     geom_vline(xintercept = median_x, linetype = "dashed", alpha = 0.5) +
     geom_hline(yintercept = median_y, linetype = "dashed", alpha = 0.5) +
     geom_point(
@@ -539,5 +538,8 @@ plot_performance_quadrants <- function(
       subtitle = "Quadrants defined by median performance. Labels for models outside inner quartiles. Axes are on a logit scale.",
       color = "Quadrant"
     ) +
-    theme_minimal()
+    theme_minimal() +
+    theme(
+      legend.position = "bottom"
+    )
 }

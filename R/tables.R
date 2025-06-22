@@ -49,12 +49,12 @@
 #'
 #' @export
 create_summary_table <- function(
-    summaries,
-    metric_name,
-    title,
-    subtitle,
-    source_note,
-    group_by_var = NULL
+  summaries,
+  metric_name,
+  title,
+  subtitle,
+  source_note,
+  group_by_var = NULL
 ) {
   rlang::check_installed("gt")
 

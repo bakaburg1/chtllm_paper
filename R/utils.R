@@ -160,7 +160,6 @@ get_env_var <- function(var_name) {
 #' seq_range(c(10, 1, 5, 3), by = 2)
 #' }
 #'
-#' @keywords internal
 seq_range <- function(
   x,
   by = NULL,
