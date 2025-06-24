@@ -194,6 +194,29 @@ compute_marginalized_summaries <- function(
       filter(.data$.category == "clean")
   }
 
+  # When the caller asks to marginalise over `model_type` we need to make sure
+  # that such a column exists in `draws`. If it is missing we try to retrieve
+  # it from `load_models()` and join by `model_id`.
+  if ("modality" %in% marginalize_over && !("model_type" %in% names(draws))) {
+    models_df <- tryCatch(
+      load_models(),
+      error = \(e) NULL
+    )
+
+    if (!is.null(models_df)) {
+      draws <- dplyr::left_join(
+        draws,
+        models_df |>
+          dplyr::select("model_id", "model_type"),
+        by = "model_id"
+      )
+    } else {
+      cli::cli_warn(
+        "Requested marginalisation over {.val model_type}, but model metadata could not be loaded."
+      )
+    }
+  }
+
   # Group and summarize
   draws |>
     summarise(
