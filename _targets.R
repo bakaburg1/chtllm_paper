@@ -491,7 +491,7 @@ list(
     format = "file"
   ),
 
-  # Posterior Analysis ----------
+  # Posterior Manipulation ----------
 
   # Number of posterior draws to extract (NULL = all draws)
   tar_target(
@@ -561,6 +561,8 @@ list(
         dplyr::mutate(.prob = 1 - .prob / length(answer_options))
     }
   ),
+
+  # Posterior Summaries ----------
 
   # Marginalized summaries for each model
   tar_target(
@@ -649,29 +651,64 @@ list(
   # Generate and store plots
   tar_target(
     correctness_plots,
-    plot_summaries(
-      summaries = summaries_correctness_interaction,
-      metric_name = "correctness",
-      y_transform = scales::percent_format(accuracy = 1),
-      y_label = "Correctness probability"
+    list(
+      by_model = plot_summaries(
+        summaries = summaries_correctness_by_model,
+        group = "model_id",
+        title = "Correctness by model"
+      ),
+      by_modality = plot_summaries(
+        summaries = summaries_correctness_by_modality,
+        group = "modality",
+        title = "Effect of prompting modality on correctness"
+      ),
+      interaction = plot_summaries(
+        summaries = summaries_correctness_interaction,
+        group = "interaction",
+        title = "Model × modality interaction for correctness"
+      )
     )
   ),
 
   tar_target(
     parsing_plots,
-    plot_summaries(
-      summaries = summaries_parsing_interaction,
-      metric_name = "parsing quality",
-      y_label = "Parsing quality (ordinal scale)"
+    list(
+      by_model = plot_summaries(
+        summaries = summaries_parsing_by_model,
+        group = "model_id",
+        title = "Parsing quality by model"
+      ),
+      by_modality = plot_summaries(
+        summaries = summaries_parsing_by_modality,
+        group = "modality",
+        title = "Effect of prompting modality on parsing quality"
+      ),
+      interaction = plot_summaries(
+        summaries = summaries_parsing_interaction,
+        group = "interaction",
+        title = "Model × modality interaction for parsing quality"
+      )
     )
   ),
 
   tar_target(
     consistency_plots,
-    plot_summaries(
-      summaries = summaries_consistency_interaction,
-      metric_name = "consistency",
-      y_label = "Consistency"
+    list(
+      by_model = plot_summaries(
+        summaries = summaries_consistency_by_model,
+        group = "model_id",
+        title = "Consistency by model"
+      ),
+      by_modality = plot_summaries(
+        summaries = summaries_consistency_by_modality,
+        group = "modality",
+        title = "Effect of prompting modality on consistency"
+      ),
+      interaction = plot_summaries(
+        summaries = summaries_consistency_interaction,
+        group = "interaction",
+        title = "Model × modality interaction for consistency"
+      )
     )
   ),
 
@@ -689,7 +726,7 @@ list(
   ),
 
   tar_target(
-    plot_correctness_vs_parsing,
+    correctness_vs_parsing_plot,
     plot_performance_quadrants(
       summary_x = summaries_correctness_by_model,
       summary_y = summaries_parsing_by_model,
@@ -702,7 +739,7 @@ list(
   ),
 
   tar_target(
-    plot_correctness_vs_consistency,
+    correctness_vs_consistency_plot,
     plot_performance_quadrants(
       summary_x = summaries_correctness_by_model,
       summary_y = summaries_consistency_by_model,
