@@ -174,18 +174,14 @@ extract_posterior_draws <- function(
 compute_marginalized_summaries <- function(
   draws,
   marginalize_over = "model_id",
-  summary_vars = NULL,
+  summary_vars = ".prob",
   ci_width = 0.95
 ) {
   rlang::check_installed("tidybayes")
 
-  # Determine summary variables if not specified
-  if (is.null(summary_vars)) {
-    if (".prob" %in% names(draws)) {
-      summary_vars <- ".prob"
-    } else {
-      stop("Could not find .prob column in draws")
-    }
+  # Check that the summary variable is present in the draws
+  if (!summary_vars %in% names(draws)) {
+    stop("Could not find .prob column in draws")
   }
 
   # Special handling for parsing data: focus on "clean" category only
