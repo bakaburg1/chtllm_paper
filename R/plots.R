@@ -203,7 +203,8 @@ plot_pareto_frontier <- function(
       models_data |>
         select("model_id", "cost_per_mln", "model_type", "provider") |>
         mutate(
-          cost_per_mln = tidyr::replace_na(.data$cost_per_mln, 0.001),
+          cost_per_mln = if_else(
+            .data$cost_per_mln %in% c(NA, 0), 0.001, .data$cost_per_mln),
           # Hack to avoid re-running the pipeline since gemma 3 is not free
           # anymore
           cost_per_mln = case_when(
