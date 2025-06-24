@@ -765,7 +765,7 @@ list(
       summaries = summaries_consistency_interaction,
       metric_name = ".prob",
       title = "Response Consistency",
-      subtitle = "Score of 1 is perfect consistency, 0 is uniform inconsistency",
+      subtitle = "Score of 100% is perfect consistency, 0% is uniform inconsistency",
       source_note = "Summaries are posterior medians with 95% CrIs.",
       group_by_var = "modality"
     )
