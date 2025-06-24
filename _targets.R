@@ -577,7 +577,7 @@ list(
     summaries_correctness_by_modality,
     compute_marginalized_summaries(
       draws = draws_correctness,
-      marginalize_over = "modality"
+      marginalize_over = c("model_type", "modality")
     )
   ),
 
@@ -609,7 +609,7 @@ list(
     summaries_parsing_by_modality,
     compute_marginalized_summaries(
       draws = draws_parsing,
-      marginalize_over = "modality"
+      marginalize_over = c("model_type", "modality")
     )
   ),
 
@@ -634,7 +634,7 @@ list(
     summaries_consistency_by_modality,
     compute_marginalized_summaries(
       draws = draws_consistency,
-      marginalize_over = "modality"
+      marginalize_over = c("model_type", "modality")
     )
   ),
 
