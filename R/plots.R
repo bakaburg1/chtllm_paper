@@ -4,20 +4,35 @@
 #' including model comparisons, modality effects, and interaction plots.
 #'
 #' @param summaries Output from compute_marginalized_summaries().
-#' @param metric_name Name of the metric being plotted.
-#' @param y_transform Transformation function for y-axis (e.g.,
-#'   scales::percent).
-#' @param y_label Label for y-axis.
+#' @param group The grouping variable for the plot. Must be one of "model_id",
+#' "modality", or "interaction".
+#' @param title Title of the plot.
 #'
-#' @return A list of ggplot objects.
+#' @return A ggplot object.
 #'
 #' @export
 plot_summaries <- function(
   summaries,
-  metric_name = NULL,
-  y_transform = NULL,
-  y_label = NULL
+  group = c("model_id", "modality", "interaction"),
+  title = NULL
 ) {
+  # Validate `group` argument
+  group <- match.arg(group)
+
+  required_cols <- switch(
+    group,
+    model_id = "model_id",
+    modality = "modality",
+    interaction = c("model_id", "modality")
+  )
+
+  missing_cols <- setdiff(required_cols, names(summaries))
+  if (length(missing_cols) > 0) {
+    cli::cli_abort(
+      "Column{?s} {.var {missing_cols}} not found in `summaries`."
+    )
+  }
+
   # Color palette for modalities
   pal <- c(
     cold = "lightblue",
@@ -25,152 +40,144 @@ plot_summaries <- function(
     reasoning = "darkred"
   )
 
-  # Determine the main metric column
-  metric_col <- names(summaries)[
-    !names(summaries) %in%
-      c(
-        "model_id",
-        "modality",
-        ".lower",
-        ".upper",
-        ".width",
-        ".point",
-        ".interval"
-      )
-  ]
 
-  if (length(metric_col) > 1) {
-    metric_col <- metric_col[1]
-    message("Multiple metric columns found, using: ", metric_col)
-  }
+  # Prepare plot data
 
-  plots <- list()
+  plot_data <- summaries
 
-  # Model comparison plot (averaged over modalities)
-  if ("model_id" %in% names(summaries) && "modality" %in% names(summaries)) {
-    model_summary <- summaries |>
-      summarise(
-        estimate = mean(.data[[metric_col]]),
-        .lower = mean(.data$.lower),
-        .upper = mean(.data$.upper),
-        .by = "model_id"
-      ) |>
-      mutate(
-        model_id = forcats::fct_reorder(
-          .data$model_id,
-          .data$estimate,
-          .desc = FALSE
+
+  # Ensure model metadata is available when needed
+
+  missing_meta <- setdiff(c("model_type", "provider"), names(plot_data))
+  if (length(missing_meta) > 0 && "model_id" %in% names(plot_data)) {
+    models_df <- tryCatch(
+      load_models(),
+      error = \(e) {
+        cli::cli_warn(
+          "Unable to retrieve model metadata. Some aesthetics may be missing."
         )
-      )
+        NULL
+      }
+    )
 
-    plots$by_model <- model_summary |>
-      ggplot() +
-      aes(.data$model_id, .data$estimate) +
-      geom_linerange(
-        aes(ymin = .data$.lower, ymax = .data$.upper),
-        linewidth = 0.8
-      ) +
-      geom_point(
-        aes(color = .data$estimate),
-        show.legend = FALSE,
-        size = 3
-      ) +
-      scale_color_viridis_c() +
-      coord_flip() +
-      theme_bw(base_size = 13) +
-      labs(
-        x = NULL,
-        y = y_label %||% metric_name,
-        title = paste(stringr::str_to_title(metric_name), "by model"),
-        subtitle = "Points = posterior median, bars = 95% CrI"
-      )
-
-    if (!is.null(y_transform)) {
-      plots$by_model <- plots$by_model +
-        scale_y_continuous(labels = y_transform)
-    }
-  }
-
-  # Modality comparison plot (averaged over models)
-  if ("modality" %in% names(summaries)) {
-    modality_summary <- summaries |>
-      summarise(
-        estimate = mean(.data[[metric_col]]),
-        .lower = mean(.data$.lower),
-        .upper = mean(.data$.upper),
-        .by = "modality"
-      )
-
-    plots$by_modality <- modality_summary |>
-      ggplot() +
-      aes(.data$modality, .data$estimate) +
-      geom_linerange(
-        aes(ymin = .data$.lower, ymax = .data$.upper),
-        linewidth = 0.8
-      ) +
-      geom_point(
-        aes(colour = .data$modality),
-        size = 4
-      ) +
-      scale_colour_manual(values = pal, guide = "none") +
-      theme_bw(base_size = 13) +
-      labs(
-        x = NULL,
-        y = y_label %||% metric_name,
-        title = paste("Effect of prompting modality on", metric_name),
-        subtitle = "Population-average predictions with 95% CrI"
-      )
-
-    if (!is.null(y_transform)) {
-      plots$by_modality <- plots$by_modality +
-        scale_y_continuous(labels = y_transform)
-    }
-  }
-
-  # Interaction plot
-  if ("model_id" %in% names(summaries) && "modality" %in% names(summaries)) {
-    interaction_data <- summaries |>
-      mutate(
-        model_id = forcats::fct_reorder(
-          .data$model_id,
-          .data[[metric_col]],
-          .desc = FALSE
+    if (!is.null(models_df)) {
+      plot_data <- plot_data |>
+        dplyr::left_join(
+          models_df |>
+            dplyr::select("model_id", "model_type", "provider"),
+          by = "model_id",
+          relationship = "many-to-many"
         )
-      )
-
-    plots$interaction <- interaction_data |>
-      ggplot() +
-      aes(
-        .data$model_id,
-        .data[[metric_col]],
-        colour = .data$modality
-      ) +
-      geom_linerange(
-        aes(ymin = .data$.lower, ymax = .data$.upper),
-        position = position_dodge(width = 0.6),
-        linewidth = 0.8
-      ) +
-      geom_point(
-        position = position_dodge(width = 0.6),
-        size = 3
-      ) +
-      scale_colour_manual(values = pal, name = "Modality") +
-      coord_flip() +
-      theme_bw(base_size = 13) +
-      labs(
-        x = NULL,
-        y = y_label %||% metric_name,
-        title = paste("Model × modality interaction for", metric_name),
-        subtitle = "Population-average predictions with 95% CrI"
-      )
-
-    if (!is.null(y_transform)) {
-      plots$interaction <- plots$interaction +
-        scale_y_continuous(labels = y_transform)
     }
   }
 
-  return(plots)
+  # If provider information is available, compute locality (API vs Local)
+  if ("provider" %in% names(plot_data)) {
+    plot_data <- plot_data |>
+      dplyr::mutate(
+        locality = ifelse(.data$provider == "ollama", "Local", "API")
+      )
+  }
+
+  # Reorder models by posterior median score
+
+  plot_data <- plot_data |>
+    dplyr::mutate(
+      # Re-order factors for nicer display when `model_id` is present.
+      dplyr::across(
+        .cols = dplyr::any_of("model_id"),
+        .fns  = ~ forcats::fct_reorder(.x, .data$.prob, .desc = FALSE)
+      )
+    )
+
+  # Build the plot
+
+  # Decide x-axis variable
+  x_var <- if (group == "modality") "modality" else "model_id"
+
+  # Common base ggplot
+  gg <- ggplot2::ggplot(plot_data)
+
+  # Geometry position: dodge only when multiple modalities per model
+  dodge <- if (group == "interaction") {
+    ggplot2::position_dodge(width = 0.6)
+  } else {
+    ggplot2::position_identity()
+  }
+
+  # Aesthetic mappings
+  if ("modality" %in% names(plot_data)) {
+    # Colour by modality; optionally shape by model_type if available
+    aes_args <- list(
+      x = quote(.data$.prob),
+      y = quote(.data[[x_var]]),
+      colour = quote(.data$modality)
+    )
+    if ("model_type" %in% names(plot_data)) {
+      aes_args$shape <- quote(.data$model_type)
+    }
+    gg <- gg + ggplot2::aes(!!!aes_args)
+  } else if (all(c("model_type", "locality") %in% names(plot_data))) {
+    # Colour by model_type, shape by locality (API vs Local)
+    gg <- gg +
+      ggplot2::aes(
+        x = .data$.prob,
+        y = .data[[x_var]],
+        colour = .data$model_type,
+        shape  = .data$locality
+      )
+  } else {
+    # Fallback – basic mapping without extra aesthetics
+    gg <- gg + ggplot2::aes(x = .data$.prob, y = .data[[x_var]])
+  }
+
+  # Error bars and points
+  gg <- gg +
+    ggplot2::geom_linerange(
+      ggplot2::aes(xmin = .data$.lower, xmax = .data$.upper),
+      position = dodge,
+      linewidth = 0.8
+    ) +
+    ggplot2::geom_point(position = dodge, size = 3)
+
+  # Scales
+  if ("modality" %in% names(plot_data)) {
+    gg <- gg + ggplot2::scale_colour_manual(values = pal, name = "Modality")
+    if ("model_type" %in% names(plot_data)) {
+      gg <- gg + ggplot2::scale_shape_manual(
+        values = c("classic" = 16, "reasoning" = 17),
+        name = "Model type"
+      )
+    }
+  } else if (all(c("model_type","locality") %in% names(plot_data))) {
+    gg <- gg +
+      ggplot2::scale_color_manual(
+        values = c(
+          "classic" = "goldenrod1",
+          "reasoning" = "darkred"
+        ),
+        name = "Model type"
+      ) +
+      ggplot2::scale_shape_manual(
+        values = c("API" = 16, "Local" = 21),
+        name = "Deployment"
+      )
+  }
+
+  # Format x axis as percentage
+  gg <- gg + ggplot2::scale_x_continuous(labels = scales::label_percent(1))
+
+  # Theme, labels, orientation
+  gg <- gg +
+    ggplot2::theme_bw(base_size = 13) +
+    ggplot2::labs(
+      x = NULL,
+      y = NULL,
+      title = title,
+      subtitle = "Points = posterior median, bars = 95% CrI"
+    )
+
+  return(gg)
 }
 
 #' Create Pareto frontier plot of correctness vs cost
@@ -254,7 +261,7 @@ plot_pareto_frontier <- function(
       aes(linetype = "Fitted"),
       method = "glm",
       method.args = list(family = quasibinomial(link = "logit")),
-      color = "red",
+      color = "darkred",
       linewidth = 0.8,
       fullrange = TRUE,
       se = FALSE
@@ -282,17 +289,18 @@ plot_pareto_frontier <- function(
     ggrepel::geom_label_repel(
       data = plot_data |> filter(.data$is_pareto),
       aes(label = .data$model_id),
-      color = "red",
+      color = "darkred",
       size = 3,
       box.padding = 0.5,
       point.padding = 0.3,
-      segment.color = "red",
+      segment.color = "darkred",
       segment.alpha = 0.6
     ) +
     coord_trans(y = "logit") +
     # Manual scales for color, shape, and alpha
     scale_color_manual(
-      values = c("Other models" = "steelblue", "Pareto frontier" = "red")
+      values = c(
+        "Other models" = "darkgoldenrod1", "Pareto frontier" = "darkred")
     ) +
     scale_shape_manual(
       values = c(
