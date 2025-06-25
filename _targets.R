@@ -13,7 +13,8 @@ pkgs <- c(
   "forcats",
   "scales",
   "ggrepel",
-  "gt"
+  "gt",
+  "epoxy"
 )
 
 tar_option_set(
