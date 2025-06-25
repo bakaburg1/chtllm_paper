@@ -27,7 +27,8 @@ Imports:
     filelock (>= 1.0.3),
     httr2 (>= 1.1.2),
     tibble (>= 3.2.1),
-    crew (>= 1.1.2)
+    crew (>= 1.1.2),
+    epoxy (>= 1.0.0)
 Config/testthat/edition: 3
 Suggests:
     targets (>= 1.11.1),

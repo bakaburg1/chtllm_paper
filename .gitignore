@@ -58,6 +58,7 @@ results/
 _targets/
 models/
 logs/
+*/.quarto/
 
 # OS specific
 .DS_Store
