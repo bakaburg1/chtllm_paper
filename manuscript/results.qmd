@@ -1,0 +1,462 @@
+---
+title: "Results"
+format:
+  html:
+    toc: true
+    number-sections: true
+execute:
+  echo: false
+  message: false
+  warning: false
+---
+
+```{r setup}
+# Locate the targets data store in the project root
+library(targets)
+library(dplyr)
+library(epoxy)
+library(ggplot2)
+library(patchwork)
+
+# Load in-package helper functions (e.g. seq_range)
+# This sources every file in the R/ directory, mimicking tar_source() in the pipeline.
+targets::tar_source(here::here("R"))
+
+# Set the targets data store
+targets::tar_config_set(store = here::here("_targets"))
+
+```
+
+## Performance overview and key drivers {#overall-performance}
+
+```{r fig-overall-correctness}
+#| fig-cap: "Posterior median accuracy by model (95% CrI)."
+#| fig-width: 8
+#| fig-height: 7
+
+# Retrieve the forest plot object
+targets::tar_load(correctness_plots)
+correctness_plots$by_model
+```
+
+```{r fig-modality-correctness}
+#| fig-cap: "Effect of prompting modality on accuracy."
+#| fig-width: 8
+#| fig-height: 6
+
+correctness_plots$by_modality
+```
+
+```{r performance-stats}
+#| cache: true
+
+# Pre-compute key statistics for dynamic inline use
+
+# Load required summary objects from the targets store
+targets::tar_load(summaries_correctness_by_model)
+targets::tar_load(summaries_correctness_by_modality)
+
+# Percentage formatter (one decimal place)
+pct <- scales::label_percent(accuracy = 0.1)
+
+acc_by_model <- summaries_correctness_by_model |>
+  arrange(desc(.data$.prob)) |>
+  mutate(
+    prob = pct(.data$.prob),
+    ci = paste0(pct(.data$.lower), "–", pct(.data$.upper))
+  )
+
+acc_by_modality <- summaries_correctness_by_modality |>
+  arrange(desc(.data$.prob)) |>
+  mutate(
+    prob = pct(.data$.prob),
+    ci = paste0(pct(.data$.lower), "–", pct(.data$.upper))
+  )
+
+get_mod <- \(id) acc_by_model |> filter(.data$model_id == id)
+
+acc_o3      <- get_mod("o3")
+acc_o1      <- get_mod("o1")
+acc_sonar   <- get_mod("perplexity-sonar-reasoning")
+acc_gempro  <- get_mod("gemini-2.5-pro-exp")
+acc_gpt4o   <- get_mod("gpt-4o")
+acc_mistral <- get_mod("mistral-large-2411")
+
+# Additional model summaries for deployment, family evolution, and search capability
+acc_deepseek_remote <- get_mod("groq-deepseek-r1-distill-qwen-32b")
+acc_deepseek_local  <- get_mod("deepseek-r1-distill-qwen-32b")
+acc_gemflash        <- get_mod("gemini-2.0-flash-exp")
+acc_gpt4o_search    <- get_mod("gpt-4o-search")
+
+worst_model <- acc_by_model |> tail(1)
+
+# Prompt modality summaries
+
+get_mod <- \(type, mod) acc_by_modality |>
+  filter(.data$model_type == type, .data$modality == mod)
+
+acc_classic_cold   <- get_mod("classic",   "cold")
+acc_classic_reason <- get_mod("classic",   "reasoning")
+acc_reasoning_cold <- get_mod("reasoning", "cold")
+acc_reasoning_free <- get_mod("reasoning", "free")
+```
+
+```{epoxy performance-text}
+Across the 40 large-language models evaluated, posterior accuracy ranged from {acc_o3$prob} [{acc_o3$ci}] for OpenAI's o3 to {worst_model$prob} [{worst_model$ci}] for the smallest local replica (`{worst_model$model_id}`) (@fig-overall-correctness).
+
+Large parameter count reasoning models dominated: in addition to o3, o1 {acc_o1$prob} [{acc_o1$ci}], Perplexity *Sonar-Reasoning* {acc_sonar$prob} [{acc_sonar$ci}], and Gemini-2.5-Pro {acc_gempro$prob} [{acc_gempro$ci}] were among the top performers.
+
+Instruction-tuned classics plateaued roughly {round((acc_gempro$.prob - acc_gpt4o$.prob) * 100, 1)} percentage points lower, led by GPT-4o {acc_gpt4o$prob} [{acc_gpt4o$ci}] and Mistral-Large-2411 {acc_mistral$prob} [{acc_mistral$ci}].
+
+Local models performed overall worse, mostly due to limits in deployable sizes that restricted deployment to very small models (e.g., 1.5B parameters). The smallest 1.5B quantization languished at {worst_model$prob} [{worst_model$ci}]. The largest deployable size on the researchers' machines was a 32B Qwen distillation of DeepSeek-R1, which achieved {acc_deepseek_local$prob} [{acc_deepseek_local$ci}] but nevertheless performed slightly worse than the same model accessed via the Groq API ({acc_deepseek_remote$prob} [{acc_deepseek_remote$ci}]), probably due to the aggressive quantization (4-bit) necessary to make it fit in memory.
+
+Within provider families, accuracy climbed with successive iterations: OpenAI's line rose from GPT-4o {acc_gpt4o$prob} [{acc_gpt4o$ci}] through o1 {acc_o1$prob} [{acc_o1$ci}] to o3 {acc_o3$prob} [{acc_o3$ci}]; Google's advanced from Gemini-Flash {acc_gemflash$prob} [{acc_gemflash$ci}] to Gemini-Pro {acc_gempro$prob} [{acc_gempro$ci}]. Similar improvements were observed for LLama and Mistral models.
+
+Search augmentation helped when well integrated: *Sonar-Reasoning* (a DeepSeek-R1 finetune with search capabilities) surpassed its base model ({acc_sonar$prob} vs {acc_deepseek_remote$prob}), whereas the search-enabled GPT-4o variant underperformed the base ({acc_gpt4o_search$prob} vs {acc_gpt4o$prob}).
+
+Prompting altered these figures only marginally (@fig-modality-correctness). Classic models improved from {acc_classic_cold$prob} with a **cold** prompt to {acc_classic_reason$prob} under explicit reasoning instructions, whereas reasoning models performed best with the concise **cold** prompt ({acc_reasoning_cold$prob} vs {acc_reasoning_free$prob} for a *free* prompt). But the largest performance gap was between reasoning models and classics, independent of prompt modality—patterns.
+```
+
+## Parsability of responses and consistency {#parsability-consistency}
+
+```{r fig-metrics}
+#| fig-cap: "Parsing success (A) and answer consistency (B) by model."
+#| out-width: "100%"
+#| fig-width: 12
+#| fig-height: 10
+
+# Load required plots
+targets::tar_load(parsing_plots)
+targets::tar_load(consistency_plots)
+
+# Combine the two ggplot objects side-by-side and share legend
+parsing_plots$by_model +
+  labs(title = "A. Parsing success") +
+  consistency_plots$by_model +
+  labs(title = "B. Answer consistency") +
+  plot_layout(guides = "collect") +
+  plot_annotation(theme = theme(legend.position = "bottom"))
+```
+
+```{r parsability-stats}
+#| cache: true
+
+# Load required summary objects
+targets::tar_load(summaries_parsing_by_model)
+targets::tar_load(summaries_consistency_by_model)
+targets::tar_load(correlation_correctness_consistency)
+# Accuracy summaries are needed for cross-metric comparisons
+targets::tar_load(summaries_correctness_by_model)
+
+# Percentage formatter (one decimal place)
+pct <- scales::label_percent(accuracy = 0.1)
+
+# --- Parsability -------------------------------------------------------
+pars_by_model <- summaries_parsing_by_model |>
+  arrange(desc(.data$.prob)) |>
+  mutate(prob = pct(.data$.prob))
+
+num_models <- nrow(pars_by_model)
+num_high_parse <- pars_by_model |>
+  filter(.data$.prob > 0.9) |>
+  nrow()
+
+get_pars <- \(id) pars_by_model |> filter(.data$model_id == id)
+get_acc  <- \(id) summaries_correctness_by_model |> filter(.data$model_id == id) |> mutate(prob = pct(.data$.prob))
+
+parse_deepseek_chat <- get_pars("deepseek-chat")
+acc_deepseek_chat   <- get_acc("deepseek-chat")
+
+parse_llama_instant <- get_pars("groq-llama-3.1-8b-instant")
+acc_llama_instant   <- get_acc("groq-llama-3.1-8b-instant")
+
+# New: high-performing frontier models for explicit values
+parse_o3       <- get_pars("o3")
+parse_gempro   <- get_pars("gemini-2.5-pro-exp")
+parse_deepseek <- get_pars("deepseek-r1")
+
+# --- Consistency -------------------------------------------------------
+cons_by_model <- summaries_consistency_by_model |>
+  arrange(.data$.prob) |>
+  mutate(prob = pct(.data$.prob))
+
+cons_min <- cons_by_model |> slice(1)
+cons_max <- cons_by_model |> slice(n())
+
+# --- Correlation -------------------------------------------------------
+corr_med   <- sprintf("%.2f", correlation_correctness_consistency$correlation)
+corr_lower <- sprintf("%.2f", correlation_correctness_consistency$.lower)
+corr_upper <- sprintf("%.2f", correlation_correctness_consistency$.upper)
+```
+
+
+```{r crossmetrics-stats}
+
+#| cache: true
+
+# Load correlation summaries
+targets::tar_load(correlation_correctness_parsing)
+targets::tar_load(correlation_correctness_consistency)
+
+# Nicely formatted correlation strings
+fmt <- function(x) sprintf("%.2f", x)
+cp_med   <- fmt(correlation_correctness_parsing$correlation)
+cp_lower <- fmt(correlation_correctness_parsing$.lower)
+cp_upper <- fmt(correlation_correctness_parsing$.upper)
+
+cc_med   <- fmt(correlation_correctness_consistency$correlation)
+cc_lower <- fmt(correlation_correctness_consistency$.lower)
+cc_upper <- fmt(correlation_correctness_consistency$.upper)
+
+# --- Quadrant statistics ----------------------------------------------
+# Helper to derive quadrants
+derive_quadrants <- function(df_x, df_y, name_x, name_y) {
+  dplyr::left_join(
+    df_x |> dplyr::select(model_id, x = .prob),
+    df_y |> dplyr::select(model_id, y = .prob),
+    by = "model_id"
+  ) |> dplyr::mutate(
+    qx = median(x, na.rm = TRUE),
+    qy = median(y, na.rm = TRUE),
+    quadrant = dplyr::case_when(
+      x > qx & y > qy ~ "TR", # high–high
+      x <= qx & y > qy ~ "TL", # low-X high-Y
+      x <= qx & y <= qy ~ "BL", # low–low
+      TRUE ~ "BR"              # high-X low-Y
+    )
+  )
+}
+
+quad_pars <- derive_quadrants(summaries_correctness_by_model, summaries_parsing_by_model, "Correctness", "Parsability")
+quad_cons <- derive_quadrants(summaries_correctness_by_model, summaries_consistency_by_model, "Correctness", "Consistency")
+
+# Counts per quadrant
+qcnt <- function(df, lab) {
+  out <- table(df$quadrant)
+  list(
+    TR = out["TR"],
+    TL = out["TL"],
+    BR = out["BR"],
+    BL = out["BL"]
+  )
+}
+pars_cnt <- qcnt(quad_pars)
+cons_cnt <- qcnt(quad_cons)
+
+# Representative models (top three by correctness within each TR cluster)
+list_models <- function(df) {
+  df |> dplyr::filter(quadrant == "TR") |> dplyr::arrange(dplyr::desc(x)) |> dplyr::slice_head(n = 3) |> dplyr::pull(model_id) |> paste(collapse = ", ")
+}
+pars_leaders <- list_models(quad_pars)
+cons_leaders <- list_models(quad_cons)
+```
+
+```{r fig-cross-metrics}
+#| fig-cap: "Correctness versus parsing quality (A) and correctness versus consistency (B)."
+#| out-width: "100%"
+#| fig-width: 12
+#| fig-height: 15
+
+targets::tar_load(correctness_vs_parsing_plot)
+targets::tar_load(correctness_vs_consistency_plot)
+
+(correctness_vs_parsing_plot + labs(title = "A. Correctness vs parsing")) /
+  (correctness_vs_consistency_plot + labs(title = "B. Correctness vs consistency"))
+```
+
+
+```{epoxy parsability-text}
+Most models were able to follow formatting instructions and produced the expected output format, allowing automating parsing of the answers ([@fig-metrics]A). Parsability exceeded 90% for {num_high_parse} of the {num_models} systems evaluated. The distribution was decidedly bimodal: at one extreme, large high-performing frontier models such as `o3` ({parse_o3$prob}), `gemini-2.5-pro` ({parse_gempro$prob}), and `deepseek-r1` ({parse_deepseek$prob}) yielded perfect rates well above 95 % (order is mostly random due to MCMC variability); at the other, small locally-running models showed a strong drop in parsability, achieving barely half that rate with scores around 50 %.
+
+In general correctness and instruction following were moderately correlated (r = {cp_med}; 95 % CrI {cp_lower}–{cp_upper}). However, well-structured output does not guarantee correctness. When plotted against each other ([@fig-cross-metrics]A), models divide into four groups: best models dominate the upper-right (accurate *and* well-formed) quadrant, while notable exceptions populate the off-diagonal quadrants. For example GPT 4o-mini and Claude 3.4 "Haiku" attains an almost perfect parse rate but underperform in terms of accuracy; on the other hand, Perplexituy Sonar Reasoning was extremely reliable in providing correct answer but had more difficulties in following formatting instructions.
+
+Response consistency was also generally good, ranging from {cons_min$prob} (`{cons_min$model_id}`) to {cons_max$prob} (`{cons_max$model_id}`) ([@fig-metrics]B).
+The correlation between correctness and consistency is expectedely high: r = {cc_med}; {cc_lower}–{cc_upper} ([@fig-cross-metrics]B): large reasoning models dominate the high-correctness, high-consistency quadrant (upper-right) while mostly incorrect and unstable models populate the bottom-right.
+Very few models sit in the top-left (mostly smaller version of high performing models, such as o4-mini and Claude 3.5 "Haiku", but also Llama 4 "Scout") and bottom-right quadrants (models inconstently right, notably, two search enabled models, Perplexity Sonar Large and GPT-4o-search).
+```
+
+## Cost-accuracy trade-off {#cost-accuracy}
+
+```{r fig-cost-accuracy}
+#| fig-cap: "Pareto frontier: Model correctness vs. cost efficiency."
+#| fig-width: 12
+#| fig-height: 8
+
+# Load the pre-computed Pareto frontier plot from the targets store
+targets::tar_load(pareto_frontier_plot)
+pareto_frontier_plot
+```
+
+```{r cost-stats}
+
+# Load posterior summaries and model metadata
+targets::tar_load(summaries_correctness_by_model)
+models_df <- load_models()
+
+# Convenience formatter for probabilities
+pct <- scales::label_percent(accuracy = 0.1)
+
+# Helper to extract nicely formatted accuracy strings
+get_acc <- function(id) {
+  summaries_correctness_by_model |>
+    dplyr::filter(.data$model_id == id) |>
+    dplyr::mutate(
+      prob = pct(.data$.prob),
+      ci   = paste0(pct(.data$.lower), "–", pct(.data$.upper))
+    )
+}
+
+get_cost <- function(id) {
+  models_df |>
+    dplyr::filter(.data$model_id == id) |>
+    dplyr::pull(cost_per_mln)
+}
+
+# Focal models
+acc_o3 <- get_acc("o3")
+acc_o1 <- get_acc("o1")
+acc_flash <- get_acc("gemini-2.0-flash-thinking-exp")
+acc_deepseek <- get_acc("deepseek-r1")
+acc_sonar <- get_acc("perplexity-sonar-reasoning")
+
+cost_o3 <- get_cost("o3")
+cost_o1 <- get_cost("o1")
+cost_flash <- get_cost("gemini-2.0-flash-thinking-exp")
+cost_deepseek <- get_cost("deepseek-r1")
+cost_sonar <- get_cost("perplexity-sonar-reasoning")
+
+# Derive the empirical Pareto frontier for context
+frontier <- summaries_correctness_by_model |>
+  dplyr::inner_join(
+    models_df |>
+      dplyr::select("model_id", "cost_per_mln"),
+    by = "model_id"
+  ) |>
+  dplyr::mutate(
+    cost_per_mln = dplyr::if_else(
+      is.na(.data$cost_per_mln) | .data$cost_per_mln == 0,
+      0.001,
+      .data$cost_per_mln
+    )
+  ) |>
+  dplyr::arrange(.data$cost_per_mln) |>
+  dplyr::mutate(
+    max_corr = cummax(.data$.prob),
+    is_pareto = .data$.prob == .data$max_corr
+  ) |>
+  dplyr::filter(.data$is_pareto)
+
+frontier_n <- nrow(frontier)
+```
+
+```{epoxy cost-text}
+The cost–accuracy analysis identified {frontier_n} Pareto-optimal models ([@fig-cost-accuracy]) spanning four orders of magnitude in price. Accuracy increased almost monotonically from roughly {acc_deepseek_local$prob} [{acc_deepseek_local$ci}] for a free local 32-B DeepSeek R1 distillation (at no cost) to {acc_o3$prob} [{acc_o3$ci}] for OpenAI's o3 (at ${cost_o3} per million tokens). Crucially, a drastic (~ 80%) recent price cut was applied to o3, positioning it at the apex of the efficiency frontier.
+
+At the extreme low-cost end, Gemini 2.0 "Flash" achieved {acc_flash$prob} [{acc_flash$ci}]. Its inclusion on the frontier owes mostly to its temporary free access for experimentation during the study period (nominal cost ${cost_flash}); performance, while strong, still trailed the very best models by roughly two percentage points.
+
+In contrast, o1 delivers a similar correctness of {acc_o1$prob} but at a far steeper cost of ${cost_o1} per million tokens, leaving it well below the frontier. Intermediate points such as DeepSeek-R1 ({acc_deepseek$prob} at ${cost_deepseek}) and Perplexity Sonar Reasoning ({acc_sonar$prob} at ${cost_sonar}) illustrate that large gains in accuracy can be obtained for modest additional spend, whereas costs beyond ≈$10 yield diminishing returns. Overall, Perplexity Sonar Reasoning and o3 currently offer the most favourable balance between accuracy and operational expense, with o3 being more stable and reliable (see @fig-cross-metrics).
+```
+
+## Item-level analysis {#item-analysis}
+
+```{r fig-item-mosaic}
+#| fig-cap: "Item-level difficulty across models (median posterior correctness and certainty)."
+#| out-width: "100%"
+#| fig-width: 12
+#| fig-height: 9
+
+targets::tar_load(correctness_mosaic_plot)
+correctness_mosaic_plot
+```
+
+```{r item-stats}
+
+# Load detailed posterior summaries
+targets::tar_load(summaries_correctness_by_model_item)
+
+# Helper for percentage formatting
+pct <- scales::label_percent(accuracy = 0.1)
+
+# Derive item-level medians across models
+item_difficulty <- summaries_correctness_by_model_item |>
+  dplyr::group_by(item) |>
+  dplyr::summarise(med = median(.prob), .groups = "drop") |>
+  dplyr::arrange(med)
+
+# Identify hardest and easiest items
+hard_items <- item_difficulty |>
+  dplyr::slice_head(n = 3)
+
+easy_items <- item_difficulty |>
+  dplyr::slice_tail(n = 3)
+
+# Create nicely formatted strings for epoxy insertion
+hard_list <- paste0("#", hard_items$item, " (", pct(hard_items$med), ")") |>
+  paste(collapse = ", ")
+
+easy_list <- paste0("#", easy_items$item, " (", pct(easy_items$med), ")") |>
+  paste(collapse = ", ")
+
+# Spread to individual variables for the extreme hardest item
+item_hard_id   <- hard_items$item[1]
+item_hard_prob <- pct(hard_items$med[1])
+
+# Calculate proportion of models likely correct (>0.5 posterior) for reference
+correct_prop <- summaries_correctness_by_model_item |>
+  dplyr::filter(item == item_hard_id) |>
+  dplyr::summarise(prop = mean(.prob > 0.5)) |>
+  dplyr::pull(prop) |>
+  scales::percent(accuracy = 1)
+
+# Load question data
+questions_raw <- readr::read_csv(
+  here::here("inst", "benchmark_travel_medicine.csv"),
+  show_col_types = FALSE
+)
+
+# ------------------------------------------------------------------
+# Raw answer distributions (non-MCMC) for hardest item
+# ------------------------------------------------------------------
+results_raw <- readr::read_csv(
+  here::here("results", "all_results.csv"),
+  show_col_types = FALSE
+)
+
+ans_dist <- results_raw |>
+  dplyr::filter(item == item_hard_id) |>
+  dplyr::mutate(answer_clean = stringr::str_extract(answer, "[A-D]")) |>
+  dplyr::count(answer_clean, name = "n") |>
+  dplyr::mutate(pct = scales::percent(n / sum(n), 1))
+
+ans_o3 <- results_raw |>
+  dplyr::filter(item == item_hard_id, model_id == "o3") |>
+  dplyr::mutate(answer_clean = stringr::str_extract(answer, "[A-D]")) |>
+  dplyr::count(answer_clean, name = "n") |>
+  dplyr::mutate(pct = scales::percent(n / sum(n), 1))
+
+# Extract key numbers for epoxy
+all_A <- ans_dist |> dplyr::filter(answer_clean == "A") |> dplyr::pull(pct)
+all_D <- ans_dist |> dplyr::filter(answer_clean == "D") |> dplyr::pull(pct)
+all_C <- ans_dist |> dplyr::filter(answer_clean == "C") |> dplyr::pull(pct)
+o3_A  <- ans_o3  |> dplyr::filter(answer_clean == "A") |> dplyr::pull(pct)
+
+# Pull answer option texts for the hardest item
+opts <- questions_raw |>
+  dplyr::filter(item == item_hard_id) |>
+  dplyr::select(option_A, option_B, option_C, option_D) |>
+  dplyr::slice(1)
+
+opt_A_txt <- stringr::str_trunc(stringr::str_squish(opts$option_A), 60)
+opt_C_txt <- stringr::str_trunc(stringr::str_squish(opts$option_C), 60)
+opt_D_txt <- stringr::str_trunc(stringr::str_squish(opts$option_D), 60)
+```
+
+```{epoxy item-text}
+Per-question model performance was highly heterogeneous ([@fig-item-mosaic]). Median correctness spanned from {item_hard_prob} for the hardest prompt (item {item_hard_id}, a neurological-symptoms scenario with a past exposure to center-west Africa rural setting, suggestive of Onchocerciasis) up to virtually perfect performance on the easiest trio ({easy_list}), covering routine travel-medicine advice and basic epidemiology.
+
+Only {correct_prop} of systems crossed the 50 % posterior threshold on item {item_hard_id}. In the raw responses, option A ("{opt_A_txt}") was chosen {all_A}, D ("{opt_D_txt}") {all_D}, and the correct option C ("{opt_C_txt}") only {all_C}. *o3* was internally consistent yet wrong, selecting A in {o3_A} of its replications. The spread across alternatives indicates genuine uncertainty rather than a single systematic misconception. Notably though, solution A is indeed the first line diagnostic approach for suspect Onchocerciasis (https://www.cdc.gov/filarial-worms/testing/index.html).
+
+Notably, for items #2 (diagnosis of suspected malaria with diarrheal symptoms) and #4 (treatment of fever and diarrhea), the second and third most challenging items after #26, the o3 model consistently provided consistencly correct responses, yet exhibited posterior medians (approximately 90% and 77%, respectively) far from 100% success rate and with wider credible intervals. This pattern reflects the regularizing properties of the hierarchical Bayesian model, which exhibits increased uncertainty when a model's performance substantially deviates from the population average.
+
+Conversely, items such as {easy_list} were solved by virtually all systems, indicating that a sizeable fraction of the benchmark targets plain retrieval rather than complex reasoning. Variation (range of posterior medians) exceeded 90 percentage points for several mid-difficulty questions, underscoring that model architecture and scale interact strongly with item traits. Overall, a small subset of challenging prompts (e.g., items {hard_list}) accounted for the bulk of performance discrimination across models.
+```
