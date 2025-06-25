@@ -174,7 +174,7 @@ plot_summaries <- function(
       x = NULL,
       y = NULL,
       title = title,
-      subtitle = "Points = posterior median, bars = 95% CrI"
+      subtitle = "Points: posterior median; bars: 95% CrI."
     )
 
   return(gg)
@@ -256,6 +256,8 @@ plot_pareto_frontier <- function(
       color = "black",
       alpha = .5
     ) +
+    #  Add a 95% accuracy threshold line
+    geom_hline(yintercept = 0.95, linetype = "dashed", alpha = 0.8) +
     # Connect Pareto frontier with lines
     geom_smooth(
       data = pareto_models,
@@ -288,15 +290,26 @@ plot_pareto_frontier <- function(
     ) +
     # Add model labels for Pareto frontier points
     ggrepel::geom_label_repel(
-      data = plot_data |> filter(.data$is_pareto),
-      aes(label = .data$model_id),
-      color = "darkred",
+      data = plot_data, #|> filter(.data$is_pareto),
+      aes(label = .data$model_id, color = .data$frontier_status),
       size = 3,
       box.padding = 0.5,
       point.padding = 0.3,
-      segment.color = "darkred",
       segment.alpha = 0.6
     ) +
+    # Reverse legend order and override linetype legend
+    guides(
+      color = guide_legend(reverse = TRUE),
+      shape = guide_legend(reverse = TRUE),
+      linetype = guide_legend(
+        reverse = TRUE,
+        override.aes = list(
+          linewidth = 1,
+          linetype = 1
+        )
+      )
+    ) +
+    # Transform the y-axis to a logit scale
     coord_trans(y = "logit") +
     # Manual scales for color, shape, and alpha
     scale_color_manual(
@@ -316,18 +329,6 @@ plot_pareto_frontier <- function(
     scale_linetype_manual(
       values = c("Empiric" = "solid", "Fitted" = "dashed")
     ) +
-    # Reverse legend order and override linetype legend
-    guides(
-      color = guide_legend(reverse = TRUE),
-      shape = guide_legend(reverse = TRUE),
-      linetype = guide_legend(
-        reverse = TRUE,
-        override.aes = list(
-          linewidth = 1,
-          linetype = 1
-        )
-      )
-    ) +
     # Scaling and labels
     scale_x_log10(
       labels = scales::dollar_format(prefix = "$"),
@@ -338,7 +339,9 @@ plot_pareto_frontier <- function(
       name = "Correctness rate",
       labels = scales::label_percent(1),
       breaks = \(x) {
-        seq_range(plot_data$correctness, length.out = 10) |> round(2)
+        seq_range(plot_data$correctness, length.out = 10) |>
+          c(0.95) |>
+          round(2)
       }
     ) +
     # Plot titles and theme
@@ -408,7 +411,9 @@ plot_correctness_mosaic <- function(
       color = "white",
       linewidth = 0.5
     ) +
-    scale_fill_viridis_c(
+    scale_fill_gradient(
+      low = "darkred",
+      high = "lightblue",
       name = "Median\nCorrectness",
       labels = scales::percent_format(accuracy = 1)
     ) +
@@ -528,14 +533,22 @@ plot_performance_quadrants <- function(
     ) +
     scale_x_continuous(
       trans = scales::logit_trans(),
+      labels = scales::label_percent(1),
       breaks = \(x) {
-        seq_range(plot_data$x_metric, length.out = 8) |> round(3)
+        x <- plot_data$x_metric |> qlogis()
+        seq_range(x, length.out = 8) |>
+          plogis() |>
+          round(3)
       }
     ) +
     scale_y_continuous(
       trans = scales::logit_trans(),
+      labels = scales::label_percent(1),
       breaks = \(x) {
-        seq_range(plot_data$y_metric, length.out = 8) |> round(3)
+        x <- plot_data$y_metric |> qlogis()
+        seq_range(x, length.out = 8) |>
+          plogis() |>
+          round(3)
       }
     ) +
     scale_color_manual(values = quadrant_colors, labels = legend_labels) +
