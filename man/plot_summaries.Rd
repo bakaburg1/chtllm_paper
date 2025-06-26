@@ -6,23 +6,20 @@
 \usage{
 plot_summaries(
   summaries,
-  metric_name = NULL,
-  y_transform = NULL,
-  y_label = NULL
+  group = c("model_id", "modality", "interaction"),
+  title = NULL
 )
 }
 \arguments{
 \item{summaries}{Output from compute_marginalized_summaries().}
 
-\item{metric_name}{Name of the metric being plotted.}
+\item{group}{The grouping variable for the plot. Must be one of "model_id",
+"modality", or "interaction".}
 
-\item{y_transform}{Transformation function for y-axis (e.g.,
-scales::percent).}
-
-\item{y_label}{Label for y-axis.}
+\item{title}{Title of the plot.}
 }
 \value{
-A list of ggplot objects.
+A ggplot object.
 }
 \description{
 Generates publication-ready plots for marginalized posterior summaries,
