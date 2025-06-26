@@ -1,2 +1,4 @@
 /.quarto/
 _targets.yaml
+*_files/
+*_cache/
