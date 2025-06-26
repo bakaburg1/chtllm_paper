@@ -7,7 +7,7 @@
 compute_marginalized_summaries(
   draws,
   marginalize_over = "model_id",
-  summary_vars = NULL,
+  summary_vars = ".prob",
   ci_width = 0.95
 )
 }
