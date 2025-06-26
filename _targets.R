@@ -526,20 +526,16 @@ list(
       )
 
       # Step 2: collapse category-level probabilities into the expected score
-      if (".category" %in% names(raw_draws)) {
-        scoring <- c("none" = 0L, "rescued" = 1L, "clean" = 2L)
+      scoring <- c("none" = 0L, "rescued" = 1L, "clean" = 2L)
 
-        processed_draws <- raw_draws |>
-          dplyr::mutate(
-            score = scoring[as.character(.data$.category)]
-          ) |>
-          dplyr::summarise(
-            .prob = sum(.prob * score),
-            .by = c("item", "model_id", "modality", ".draw")
-          )
-      } else {
-        processed_draws <- raw_draws
-      }
+      processed_draws <- raw_draws |>
+        dplyr::mutate(
+          score = scoring[as.character(.data$.category)]
+        ) |>
+        dplyr::summarise(
+          .prob = sum(.prob * score),
+          .by = c("item", "model_id", "modality", ".draw")
+        )
 
       # Step 3: rescale to the 0-1 interval (divide by max score = 2)
       processed_draws <- processed_draws |>
