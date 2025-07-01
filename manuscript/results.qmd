@@ -2,6 +2,7 @@
 title: "Results"
 format:
   html:
+    embed-resources: true
     toc: true
     number-sections: true
 execute:
@@ -30,7 +31,7 @@ targets::tar_config_set(store = here::here("_targets"))
 ## Performance overview and key drivers {#overall-performance}
 
 ```{r fig-overall-correctness}
-#| fig-cap: "Posterior median accuracy by model (95% CrI)."
+#| fig-cap: "Model accuracy on the travel-medicine benchmark. Points show the posterior median accuracy, with bars representing the 95% credible intervals. Models are ordered by performance."
 #| fig-width: 8
 #| fig-height: 7
 
@@ -40,7 +41,7 @@ correctness_plots$by_model
 ```
 
 ```{r fig-modality-correctness}
-#| fig-cap: "Effect of prompting modality on accuracy."
+#| fig-cap: "Effect of prompting modality on model accuracy. Points show the posterior median and bars the 95% credible intervals."
 #| fig-width: 8
 #| fig-height: 6
 
@@ -63,14 +64,14 @@ acc_by_model <- summaries_correctness_by_model |>
   arrange(desc(.data$.prob)) |>
   mutate(
     prob = pct(.data$.prob),
-    ci = paste0(pct(.data$.lower), "–", pct(.data$.upper))
+    ci = paste0(pct(.data$.lower), "-", pct(.data$.upper))
   )
 
 acc_by_modality <- summaries_correctness_by_modality |>
   arrange(desc(.data$.prob)) |>
   mutate(
     prob = pct(.data$.prob),
-    ci = paste0(pct(.data$.lower), "–", pct(.data$.upper))
+    ci = paste0(pct(.data$.lower), "-", pct(.data$.upper))
   )
 
 get_mod <- \(id) acc_by_model |> filter(.data$model_id == id)
@@ -114,13 +115,13 @@ Within provider families, accuracy climbed with successive iterations: OpenAI's 
 
 Search augmentation helped when well integrated: *Sonar-Reasoning* (a DeepSeek-R1 finetune with search capabilities) surpassed its base model ({acc_sonar$prob} vs {acc_deepseek_remote$prob}), whereas the search-enabled GPT-4o variant underperformed the base ({acc_gpt4o_search$prob} vs {acc_gpt4o$prob}).
 
-Prompting altered these figures only marginally (@fig-modality-correctness). Classic models improved from {acc_classic_cold$prob} with a **cold** prompt to {acc_classic_reason$prob} under explicit reasoning instructions, whereas reasoning models performed best with the concise **cold** prompt ({acc_reasoning_cold$prob} vs {acc_reasoning_free$prob} for a *free* prompt). But the largest performance gap was between reasoning models and classics, independent of prompt modality—patterns.
+Prompting altered these figures only marginally (@fig-modality-correctness). Classic models improved from {acc_classic_cold$prob} with a **cold** prompt to {acc_classic_reason$prob} under explicit reasoning instructions, whereas reasoning models performed best with the concise **cold** prompt ({acc_reasoning_cold$prob} vs {acc_reasoning_free$prob} for a *free* prompt). But the largest performance gap was between reasoning models and classics, independent of prompt modality.
 ```
 
 ## Parsability of responses and consistency {#parsability-consistency}
 
 ```{r fig-metrics}
-#| fig-cap: "Parsing success (A) and answer consistency (B) by model."
+#| fig-cap: "Model performance on secondary metrics. (A) Parsing success, measured as parsing success score. (B) Answer consistency, measuring the reproducibility of answers across identical prompts. Points are posterior medians, bars are 95% credible intervals."
 #| out-width: "100%"
 #| fig-width: 12
 #| fig-height: 10
@@ -219,9 +220,9 @@ derive_quadrants <- function(df_x, df_y, name_x, name_y) {
     qx = median(x, na.rm = TRUE),
     qy = median(y, na.rm = TRUE),
     quadrant = dplyr::case_when(
-      x > qx & y > qy ~ "TR", # high–high
+      x > qx & y > qy ~ "TR", # high-high
       x <= qx & y > qy ~ "TL", # low-X high-Y
-      x <= qx & y <= qy ~ "BL", # low–low
+      x <= qx & y <= qy ~ "BL", # low-low
       TRUE ~ "BR"              # high-X low-Y
     )
   )
@@ -252,7 +253,7 @@ cons_leaders <- list_models(quad_cons)
 ```
 
 ```{r fig-cross-metrics}
-#| fig-cap: "Correctness versus parsing quality (A) and correctness versus consistency (B)."
+#| fig-cap: "Relationship between accuracy and other performance metrics. (A) Accuracy versus parsing success. (B) Accuracy versus answer consistency. Each point represents a model, categorised into quadrants based on median performance."
 #| out-width: "100%"
 #| fig-width: 12
 #| fig-height: 15
@@ -266,19 +267,19 @@ targets::tar_load(correctness_vs_consistency_plot)
 
 
 ```{epoxy parsability-text}
-Most models were able to follow formatting instructions and produced the expected output format, allowing automating parsing of the answers ([@fig-metrics]A). Parsability exceeded 90% for {num_high_parse} of the {num_models} systems evaluated. The distribution was decidedly bimodal: at one extreme, large high-performing frontier models such as `o3` ({parse_o3$prob}), `gemini-2.5-pro` ({parse_gempro$prob}), and `deepseek-r1` ({parse_deepseek$prob}) yielded perfect rates well above 95 % (order is mostly random due to MCMC variability); at the other, small locally-running models showed a strong drop in parsability, achieving barely half that rate with scores around 50 %.
+Most models followed formatting instructions and produced the expected output format, which allowed for automated parsing of the answers ([@fig-metrics]A). Parsability exceeded 90% for {num_high_parse} of the {num_models} systems evaluated. The distribution was decidedly bimodal: at one extreme, large high-performing frontier models such as `o3` ({parse_o3$prob}), `gemini-2.5-pro` ({parse_gempro$prob}), and `deepseek-r1` ({parse_deepseek$prob}) yielded perfect rates well above 95%; at the other, small locally-running models showed a strong drop in parsability, achieving barely half that rate with scores around 50%.
 
-In general correctness and instruction following were moderately correlated (r = {cp_med}; 95 % CrI {cp_lower}–{cp_upper}). However, well-structured output does not guarantee correctness. When plotted against each other ([@fig-cross-metrics]A), models divide into four groups: best models dominate the upper-right (accurate *and* well-formed) quadrant, while notable exceptions populate the off-diagonal quadrants. For example GPT 4o-mini and Claude 3.4 "Haiku" attains an almost perfect parse rate but underperform in terms of accuracy; on the other hand, Perplexituy Sonar Reasoning was extremely reliable in providing correct answer but had more difficulties in following formatting instructions.
+In general, accuracy and instruction-following were moderately correlated (r = {cp_med}; 95% CrI {cp_lower}-{cp_upper}). However, a well-structured output did not guarantee correctness. When plotted against each other ([@fig-cross-metrics]A), the models divided into four groups: the best models dominated the upper-right (accurate and well-formed) quadrant, while notable exceptions populated the off-diagonal quadrants. For example, GPT-4o Mini and Claude 3.5 Haiku attained an almost perfect parse rate but underperformed in terms of accuracy; on the other hand, Perplexity Sonar Reasoning was extremely reliable in providing correct answers but had more difficulties in following formatting instructions.
 
 Response consistency was also generally good, ranging from {cons_min$prob} (`{cons_min$model_id}`) to {cons_max$prob} (`{cons_max$model_id}`) ([@fig-metrics]B).
-The correlation between correctness and consistency is expectedely high: r = {cc_med}; {cc_lower}–{cc_upper} ([@fig-cross-metrics]B): large reasoning models dominate the high-correctness, high-consistency quadrant (upper-right) while mostly incorrect and unstable models populate the bottom-right.
-Very few models sit in the top-left (mostly smaller version of high performing models, such as o4-mini and Claude 3.5 "Haiku", but also Llama 4 "Scout") and bottom-right quadrants (models inconstently right, notably, two search enabled models, Perplexity Sonar Large and GPT-4o-search).
+The correlation between accuracy and consistency was expectedly high ($\rho_s$ = {cc_med}; 95% CrI {cc_lower}-{cc_upper}; [@fig-cross-metrics]B): large reasoning models dominated the high-accuracy, high-consistency quadrant (upper-right) while mostly incorrect and unstable models populated the bottom-right.
+Very few models were in the top-left quadrant (mostly smaller versions of high-performing models, such as o4-mini and Claude 3.5 "Haiku", but also Llama 4 "Scout") or the bottom-right quadrant (models inconsistently right, notably two search-enabled models, Perplexity Sonar Large and GPT-4o-search).
 ```
 
 ## Cost-accuracy trade-off {#cost-accuracy}
 
 ```{r fig-cost-accuracy}
-#| fig-cap: "Pareto frontier: Model correctness vs. cost efficiency."
+#| fig-cap: "Cost-accuracy trade-off and Pareto frontier. The frontier (red line) highlights models offering the best accuracy for a given cost. The y-axis is on a logit scale and the x-axis on the log10 scale of cost per million tokens."
 #| fig-width: 12
 #| fig-height: 8
 
@@ -302,7 +303,7 @@ get_acc <- function(id) {
     dplyr::filter(.data$model_id == id) |>
     dplyr::mutate(
       prob = pct(.data$.prob),
-      ci   = paste0(pct(.data$.lower), "–", pct(.data$.upper))
+      ci   = paste0(pct(.data$.lower), "-", pct(.data$.upper))
     )
 }
 
@@ -350,17 +351,17 @@ frontier_n <- nrow(frontier)
 ```
 
 ```{epoxy cost-text}
-The cost–accuracy analysis identified {frontier_n} Pareto-optimal models ([@fig-cost-accuracy]) spanning four orders of magnitude in price. Accuracy increased almost monotonically from roughly {acc_deepseek_local$prob} [{acc_deepseek_local$ci}] for a free local 32-B DeepSeek R1 distillation (at no cost) to {acc_o3$prob} [{acc_o3$ci}] for OpenAI's o3 (at ${cost_o3} per million tokens). Crucially, a drastic (~ 80%) recent price cut was applied to o3, positioning it at the apex of the efficiency frontier.
+The cost-accuracy analysis identified {frontier_n} Pareto-optimal models ([@fig-cost-accuracy]) spanning four orders of magnitude in price. Accuracy increased almost monotonically from roughly {acc_deepseek_local$prob} [{acc_deepseek_local$ci}] for a free local 32-B DeepSeek R1 distillation (at no cost) to {acc_o3$prob} [{acc_o3$ci}] for OpenAI's o3 (at ${cost_o3} per million tokens). Crucially, a drastic (~80%) recent price cut for o3 positioned it at the apex of the efficiency frontier.
 
 At the extreme low-cost end, Gemini 2.0 "Flash" achieved {acc_flash$prob} [{acc_flash$ci}]. Its inclusion on the frontier owes mostly to its temporary free access for experimentation during the study period (nominal cost ${cost_flash}); performance, while strong, still trailed the very best models by roughly two percentage points.
 
-In contrast, o1 delivers a similar correctness of {acc_o1$prob} but at a far steeper cost of ${cost_o1} per million tokens, leaving it well below the frontier. Intermediate points such as DeepSeek-R1 ({acc_deepseek$prob} at ${cost_deepseek}) and Perplexity Sonar Reasoning ({acc_sonar$prob} at ${cost_sonar}) illustrate that large gains in accuracy can be obtained for modest additional spend, whereas costs beyond ≈$10 yield diminishing returns. Overall, Perplexity Sonar Reasoning and o3 currently offer the most favourable balance between accuracy and operational expense, with o3 being more stable and reliable (see @fig-cross-metrics).
+In contrast, o1 delivers a similar accuracy of {acc_o1$prob} but at a far steeper cost of ${cost_o1} per million tokens, leaving it well below the frontier. Intermediate points such as DeepSeek-R1 ({acc_deepseek$prob} at ${cost_deepseek}) and Perplexity Sonar Reasoning ({acc_sonar$prob} at ${cost_sonar}) illustrate that large gains in accuracy can be obtained for modest additional spend, whereas costs beyond ≈$10 yield diminishing returns. Overall, Perplexity Sonar Reasoning and o3 currently offer the most favourable balance between accuracy and operational expense, with o3 being more stable and reliable (see @fig-cross-metrics).
 ```
 
 ## Item-level analysis {#item-analysis}
 
 ```{r fig-item-mosaic}
-#| fig-cap: "Item-level difficulty across models (median posterior correctness and certainty)."
+#| fig-cap: "Item-level performance across all models. Each cell shows the median posterior correctness for a given model and question. Color intensity reflects correctness, and transparency indicates certainty (narrower credible intervals are more opaque)."
 #| out-width: "100%"
 #| fig-width: 12
 #| fig-height: 9
@@ -452,11 +453,11 @@ opt_D_txt <- stringr::str_trunc(stringr::str_squish(opts$option_D), 60)
 ```
 
 ```{epoxy item-text}
-Per-question model performance was highly heterogeneous ([@fig-item-mosaic]). Median correctness spanned from {item_hard_prob} for the hardest prompt (item {item_hard_id}, a neurological-symptoms scenario with a past exposure to center-west Africa rural setting, suggestive of Onchocerciasis) up to virtually perfect performance on the easiest trio ({easy_list}), covering routine travel-medicine advice and basic epidemiology.
+Per-question model performance was highly heterogeneous ([@fig-item-mosaic]). Median accuracy spanned from {item_hard_prob} for the hardest prompt (item {item_hard_id}, a neurological-symptoms scenario with a past exposure to center-west Africa rural setting, suggestive of Onchocerciasis) up to virtually perfect performance on the easiest trio ({easy_list}), covering routine travel-medicine advice and basic epidemiology.
 
-Only {correct_prop} of systems crossed the 50 % posterior threshold on item {item_hard_id}. In the raw responses, option A ("{opt_A_txt}") was chosen {all_A}, D ("{opt_D_txt}") {all_D}, and the correct option C ("{opt_C_txt}") only {all_C}. *o3* was internally consistent yet wrong, selecting A in {o3_A} of its replications. The spread across alternatives indicates genuine uncertainty rather than a single systematic misconception. Notably though, solution A is indeed the first line diagnostic approach for suspect Onchocerciasis (https://www.cdc.gov/filarial-worms/testing/index.html).
+Only {correct_prop} of systems crossed the 50% posterior threshold on item {item_hard_id}. In the raw responses, option A ("{opt_A_txt}") was chosen {all_A}, D ("{opt_D_txt}") {all_D}, and the correct option C ("{opt_C_txt}") only {all_C}. *o3* was internally consistent yet wrong, selecting A in {o3_A} of its replications. The spread across alternatives indicates genuine uncertainty rather than a single systematic misconception. Notably, solution A is the first-line diagnostic approach for suspected Onchocerciasis.
 
-Notably, for items #2 (diagnosis of suspected malaria with diarrheal symptoms) and #4 (treatment of fever and diarrhea), the second and third most challenging items after #26, the o3 model consistently provided consistencly correct responses, yet exhibited posterior medians (approximately 90% and 77%, respectively) far from 100% success rate and with wider credible intervals. This pattern reflects the regularizing properties of the hierarchical Bayesian model, which exhibits increased uncertainty when a model's performance substantially deviates from the population average, since each question is modelled as having its own intercept and no model/item interaction was included for better generalization.
+Notably, for items #2 (diagnosis of suspected malaria with diarrheal symptoms) and #4 (treatment of fever and diarrhea), the second and third most challenging items after #26, the o3 model consistently provided correct responses, yet exhibited posterior medians (approximately 90% and 77%, respectively) far from a 100% success rate and with wider credible intervals. This pattern reflects the regularizing properties of the hierarchical Bayesian model, which exhibits increased uncertainty when a model's performance substantially deviates from the population average, as each question was modelled with its own intercept and no model/item interaction was included for better generalization.
 
-Conversely, items such as {easy_list} were solved by virtually all systems, indicating that a sizeable fraction of the benchmark targets plain retrieval rather than complex reasoning. Variation (range of posterior medians) exceeded 90 percentage points for several mid-difficulty questions, underscoring that model architecture and scale interact strongly with item traits. Overall, a small subset of challenging prompts (e.g., items {hard_list}) accounted for the bulk of performance discrimination across models.
+Conversely, items such as {easy_list} were solved by virtually all systems, indicating that a sizeable fraction of the benchmark targeted plain retrieval rather than complex reasoning. Variation (range of posterior medians) exceeded 90 percentage points for several mid-difficulty questions, underscoring that model architecture and scale interact strongly with item traits. Overall, a small subset of challenging prompts (e.g., items {hard_list}) accounted for the bulk of performance discrimination across models.
 ```
