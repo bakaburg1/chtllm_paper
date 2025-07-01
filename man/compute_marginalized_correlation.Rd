@@ -26,7 +26,7 @@ interval.
 \description{
 Provides a unified engine for computing Spearman correlations between two
 sets of posterior draws, with optional marginalisation (averaging) over any
-combination of grouping variables – e.g. \code{"model_id"} (default),
+combination of grouping variables - e.g. \code{"model_id"} (default),
 \code{c("model_id", "modality")}, or \code{c("item", "model_id", "modality")}.
 }
 \details{

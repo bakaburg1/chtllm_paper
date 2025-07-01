@@ -127,7 +127,7 @@ plot_summaries <- function(
         shape  = .data$locality
       )
   } else {
-    # Fallback – basic mapping without extra aesthetics
+    # Fallback - basic mapping without extra aesthetics
     gg <- gg + ggplot2::aes(x = .data$.prob, y = .data[[x_var]])
   }
 
@@ -218,28 +218,28 @@ plot_pareto_frontier <- function(
       by = "model_id"
     ) |>
     # Use the main probability column (should be .prob)
-    rename(correctness = ".prob") |>
+    rename(accuracy = ".prob") |>
     # Compute Pareto frontier status
     # A point is on the Pareto frontier if no other point has both
     # higher correctness AND lower cost
     arrange(.data$cost_per_mln) |>
     mutate(
-      max_correctness_so_far = cummax(.data$correctness),
-      is_pareto = .data$correctness == .data$max_correctness_so_far,
+      max_accuracy_so_far = cummax(.data$accuracy),
+      is_pareto = .data$accuracy == .data$max_accuracy_so_far,
       frontier_status = if_else(
         .data$is_pareto,
         "Pareto frontier",
         "Other models"
       )
     ) |>
-    select(-"max_correctness_so_far")
+    select(-"max_accuracy_so_far")
 
   # Filter only models at the frontier
   pareto_models <- plot_data |> filter(.data$is_pareto)
 
   # Create the plot
   plot_data |>
-    ggplot(aes(.data$cost_per_mln, .data$correctness)) +
+    ggplot(aes(.data$cost_per_mln, .data$accuracy)) +
     # Pareto frontier line
     geom_line(
       data = pareto_models,
@@ -251,8 +251,8 @@ plot_pareto_frontier <- function(
       "segment",
       x = max(pareto_models$cost_per_mln),
       xend = Inf,
-      y = max(pareto_models$correctness),
-      yend = max(pareto_models$correctness),
+      y = max(pareto_models$accuracy),
+      yend = max(pareto_models$accuracy),
       color = "black",
       alpha = .5
     ) +
@@ -336,10 +336,10 @@ plot_pareto_frontier <- function(
       minor_breaks = scales::trans_breaks("log10", function(x) 10^x, n = 10)
     ) +
     scale_y_continuous(
-      name = "Correctness rate",
+      name = "Accuracy",
       labels = scales::label_percent(1),
       breaks = \(x) {
-        seq_range(plot_data$correctness, length.out = 10) |>
+        seq_range(plot_data$accuracy, length.out = 10) |>
           c(0.95) |>
           round(2)
       }
@@ -347,10 +347,10 @@ plot_pareto_frontier <- function(
     # Plot titles and theme
     labs(
       x = "Cost per million tokens",
-      y = "Correctness rate",
+      y = "Accuracy",
       color = NULL,
       linetype = "Pareto frontier",
-      title = "Pareto frontier: Model correctness vs. cost efficiency",
+      title = "Pareto frontier: Model accuracy vs. cost efficiency",
       subtitle = "Optimal models balance high accuracy with low operational costs",
       caption = "Points = individual models; Lines = Pareto-efficient frontiers"
     ) +
@@ -379,10 +379,10 @@ plot_correctness_mosaic <- function(
   # Reorder models by average correctness (worst on top, best at bottom)
   model_order <- correctness_summaries |>
     summarise(
-      avg_correctness = mean(.data$.prob, na.rm = TRUE),
+      avg_accuracy = mean(.data$.prob, na.rm = TRUE),
       .by = "model_id"
     ) |>
-    arrange(.data$avg_correctness) |>
+    arrange(.data$avg_accuracy) |>
     pull(.data$model_id)
 
   plot_data <- correctness_summaries |>
@@ -414,7 +414,7 @@ plot_correctness_mosaic <- function(
     scale_fill_gradient(
       low = "darkred",
       high = "lightblue",
-      name = "Median\nCorrectness",
+      name = "Median\nAccuracy",
       labels = scales::percent_format(accuracy = 1)
     ) +
     # Alpha scale ensures transparency is mapped correctly
@@ -425,9 +425,9 @@ plot_correctness_mosaic <- function(
     labs(
       x = "Benchmark Item ID",
       y = "Model",
-      title = "Some questions are inherently harder for all models",
+      title = "Item-level accuracy across models",
       subtitle = paste(
-        "Color indicates median correctness;",
+        "Color indicates median accuracy;",
         "transparency reflects certainty (1 - CrI width)."
       )
     ) +

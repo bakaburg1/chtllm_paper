@@ -25,9 +25,9 @@ prepare_correctness_data <- function(results) {
 #' Converts each LLM response to an ordered parsing‐quality outcome suitable for
 #' an **ordered logit** model. Responses are classified as:
 #'
-#' * `none`    – the answer could **not** be parsed (`status == "N"`).
-#' * `rescued` – the answer required a fix (an asterisk `*` detected).
-#' * `clean`   – the answer was parsed without changes.
+#' * `none`    - the answer could **not** be parsed (`status == "N"`).
+#' * `rescued` - the answer required a fix (an asterisk `*` detected).
+#' * `clean`   - the answer was parsed without changes.
 #'
 #' The returned data contains **one row per response** with an ordered factor
 #' `y` (levels `none < rescued < clean`) plus the grouping variables used in the
@@ -229,7 +229,7 @@ compute_marginalized_summaries <- function(
 #'
 #' Provides a unified engine for computing Spearman correlations between two
 #' sets of posterior draws, with optional marginalisation (averaging) over any
-#' combination of grouping variables – e.g. `"model_id"` (default),
+#' combination of grouping variables - e.g. `"model_id"` (default),
 #' `c("model_id", "modality")`, or `c("item", "model_id", "modality")`.
 #'
 #' For every posterior draw the function first collapses the probability
