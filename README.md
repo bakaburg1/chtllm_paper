@@ -57,7 +57,7 @@ For each unique combination, in parallel, the pipeline:
 
 After compiling the raw results, the pipeline advances to a Bayesian multilevel modelling stage implemented with the `brms` package.
 
-* **Correctness model:** A binomial logistic model that estimates the probability of answering correctly as a function of `model_id`, `modality`, and their interaction, with varying (random-effect) intercepts for each question item.
+* **Accuracy model:** A binomial logistic model that estimates the probability of answering correctly as a function of `model_id`, `modality`, and their interaction, with varying (random-effect) intercepts for each question item.
 * **Parsing-quality model:** A multinomial ordinal model that captures the probabilities of responses being *clean*, *rescued*, or *failed*.
 * **Consistency model:** A multinomial model that measures how consistent a model's answers are across replications using categorical probabilities for options *B*, *C*, and *D*.
 
@@ -74,13 +74,13 @@ Posterior draws from each model are extracted with `extract_posterior_draws()` a
 
 Several helper targets turn the posterior summaries into publication-ready artefacts:
 
-* `plot_summaries()` – faceted forest plots for each metric (correctness, parsing, and the three consistency variants).
-* `plot_pareto_frontier()` – a two-objective plot that highlights trade-offs between correctness and consistency at the model level.
-* `create_summary_table()` + `save_gt_table()` – nicely formatted `gt` tables saved under `outputs/tables/` (e.g. `correctness.html`, `parsing.html`, `consistency.html`).
+* `plot_summaries()` - faceted forest plots for each metric (accuracy, parsing, and the three consistency variants).
+* `plot_pareto_frontier()` - a two-objective plot that highlights trade-offs between accuracy and consistency at the model level.
+* `create_summary_table()` + `save_gt_table()` - nicely formatted `gt` tables saved under `outputs/tables/` (e.g. `accuracy.html`, `parsing.html`, `consistency.html`).
 
 ### Correlation Analyses
 
-Finally, `compute_model_correlation()` explores relationships between metrics, for example the link between correctness and parsing quality, or correctness and KL-based consistency.
+Finally, `compute_model_correlation()` explores relationships between metrics, for example the link between accuracy and parsing quality, or accuracy and KL-based consistency.
 
 All of the above steps are fully reproducible and automatically re-executed by **targets** whenever the underlying inputs change.
 
