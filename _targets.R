@@ -652,17 +652,17 @@ list(
       by_model = plot_summaries(
         summaries = summaries_correctness_by_model,
         group = "model_id",
-        title = "Correctness by model"
+        title = "Accuracy by model"
       ),
       by_modality = plot_summaries(
         summaries = summaries_correctness_by_modality,
         group = "modality",
-        title = "Effect of prompting modality on correctness"
+        title = "Effect of prompting modality on accuracy"
       ),
       interaction = plot_summaries(
         summaries = summaries_correctness_interaction,
         group = "interaction",
-        title = "Model × modality interaction for correctness"
+        title = "Model × modality interaction for accuracy"
       )
     )
   ),
@@ -673,17 +673,17 @@ list(
       by_model = plot_summaries(
         summaries = summaries_parsing_by_model,
         group = "model_id",
-        title = "Parsing quality by model"
+        title = "Parsing success by model"
       ),
       by_modality = plot_summaries(
         summaries = summaries_parsing_by_modality,
         group = "modality",
-        title = "Effect of prompting modality on parsing quality"
+        title = "Effect of prompting modality on parsing success"
       ),
       interaction = plot_summaries(
         summaries = summaries_parsing_interaction,
         group = "interaction",
-        title = "Model × modality interaction for parsing quality"
+        title = "Model × modality interaction for parsing success"
       )
     )
   ),
@@ -727,11 +727,11 @@ list(
     plot_performance_quadrants(
       summary_x = summaries_correctness_by_model,
       summary_y = summaries_parsing_by_model,
-      x_lab = "Correctness Probability",
-      y_lab = "Clean Parsing Probability",
-      title = "Model Performance: Correctness vs. Parsability",
-      x_name = "Correctness",
-      y_name = "Parsability"
+      x_lab = "Accuracy",
+      y_lab = "Parsing Success",
+      title = "Model Performance: Accuracy vs. Parsing Success",
+      x_name = "Accuracy",
+      y_name = "Parsing Success"
     )
   ),
 
@@ -740,10 +740,10 @@ list(
     plot_performance_quadrants(
       summary_x = summaries_correctness_by_model,
       summary_y = summaries_consistency_by_model,
-      x_lab = "Correctness Probability",
+      x_lab = "Accuracy",
       y_lab = "Consistency",
-      title = "Model Performance: Correctness vs. Consistency",
-      x_name = "Correctness",
+      title = "Model Performance: Accuracy vs. Consistency",
+      x_name = "Accuracy",
       y_name = "Consistency"
     )
   ),

@@ -19,9 +19,9 @@ an \strong{ordered logit} model. Responses are classified as:
 }
 \details{
 \itemize{
-\item \code{none}    – the answer could \strong{not} be parsed (\code{status == "N"}).
-\item \code{rescued} – the answer required a fix (an asterisk \code{*} detected).
-\item \code{clean}   – the answer was parsed without changes.
+\item \code{none}    - the answer could \strong{not} be parsed (\code{status == "N"}).
+\item \code{rescued} - the answer required a fix (an asterisk \code{*} detected).
+\item \code{clean}   - the answer was parsed without changes.
 }
 
 The returned data contains \strong{one row per response} with an ordered factor
