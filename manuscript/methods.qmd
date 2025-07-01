@@ -32,7 +32,7 @@ n_combos <- targets::tar_load(results) |> nrow()
 
 ## Study design
 
-We conducted a comparative evaluation of large-language models (LLMs) on a domain-specific benchmark of travel-medicine questions. Each model was asked to solve the same set of multiple-choice travel-medicine clinical vignettes under distinct prompting conditions. Performance was assessed across three complementary dimensions—accuracy, adherence to the required answer format, and internal consistency—using a fully reproducible analysis pipeline.
+A comparative evaluation of large-language models (LLMs) was conducted on a domain-specific benchmark of travel-medicine questions. Each model was asked to solve the same set of multiple-choice travel-medicine clinical vignettes under distinct prompting conditions. Performance was assessed across three complementary dimensions—accuracy, adherence to the required answer format, and internal consistency—using a fully reproducible analysis pipeline.
 
 The benchmark comprised `r n_questions` single-best-answer questions representative of real-world scenarios encountered in travel health practice. Items were collated from freely accessible online repositories, chiefly the sample question banks curated by the International Society of Travel Medicine ([https://www.istmfoundation.net/cth_samplequestions](https://www.istmfoundation.net/cth_samplequestions)) and the American Society of Tropical Medicine and Hygiene certificate programme ([https://www.astmh.org/education-resources/certificate-programs](https://www.astmh.org/education-resources/certificate-programs)). They covered diagnosis, prevention, and therapeutic decision-making for parasitic, bacterial, and viral conditions.
 The question list is reported in Supplementary Table X.
@@ -58,16 +58,17 @@ Responses were matched against the correct answer and classified into four mutua
 
 ## Statistical models
 
-We analysed the classification results with three multilevel Bayesian models, covering three metrics: accuracy, parsing success, and consistency.
+The classification results were analysed with three multilevel Bayesian models, covering three metrics: accuracy, parsing success, and consistency.
+The Bayesian modelling approach has the advantage of providing more generalisable results compared to crude descriptive statistics, making the results less dependent on the specific sample of questions used.
 All models were fitted in Stan through the *brms* interface and included a random intercept for items, a random intercept by model, as well as a random slope for the interaction between prompting modality and model.
 Variance components were assigned weakly-informative Student-t priors with three degrees of freedom and scale 1.5, whereas correlation matrices were given an LKJ prior with shape parameter 2, which gently shrinks correlations towards zero [@gelman2006; @lkjprior].
 Two Hamiltonian Monte Carlo chains were run for 4 000 iterations (1 000 warm-up) and convergence was assessed with $\hat R (< 1.01)$ and effective sample sizes.
 
 ### Accuracy
 
-To measure accuracy, we estimated the probability of a correct response for each item, model, prompt combination over $N$ replications.
+To measure accuracy, the probability of a correct response was estimated for each item, model, prompt combination over $N$ replications.
 
-Let $(i = 1, \dots, N)$ index each unique item, model, prompt combination. For each cell $i$, we observe $Y_i$ correct replications out of $T_i$ trials. We model these counts with a binomial hierarchical model:
+Let $(i = 1, \dots, N)$ index each unique item, model, prompt combination. For each cell $i$, $Y_i$  is the number of correct replications out of $T_i$ trials. These counts were modelled with a binomial hierarchical model:
 
 $$
 \begin{aligned}
@@ -102,8 +103,8 @@ Posterior samples of $\pi_i$ provide the accuracy score for each combination of 
 
 ### Parsing success
 
-To evaluate the reliability of the answer format we considered, for every individual replication, an ordinal response
-$Y_n\in\{0,1,2\}$ encoding parsing success, with:
+To evaluate the reliability of the answer format, for every individual replication, an ordinal response
+$Y_n\in\{0,1,2\}$ encoding parsing success was considered, with:
 
 - $0$ (*none*) - parsing failed,
 - $1$ (*rescued*) - the answer needed parsing by an auxiliary LLM,
@@ -123,7 +124,7 @@ The two cumulative probabilities imply three probabilities, one per parsing cate
 \pi_{n2} &= 1 - \operatorname{logit}^{-1}(\kappa_1 - \eta_n).
 \end{aligned}
 
-The linear predictor $\eta_n$ formulation and priors are identical to those adopted for the accuracy model.
+The linear predictor $\eta_n$ formulation and priors were identical to those adopted for the accuracy model.
 
 This model corresponds to the **brms** call:
 
@@ -144,7 +145,7 @@ $d_i$ were selected across the $T=5$ replications of each
 (question, model, prompt) cell, indexed by $i$.
 Because the possible answers are four (A, B, C, D), the observed range is $d_i\in\{1,\dots,4\}$.
 
-We treated $d_i$ as the number of "successes" in an
+The count $d_i$ was treated as the number of "successes" in an
 improper binomial experiment with $T=5$ trials:
 
 $$
@@ -169,14 +170,16 @@ so that $C_i=1$ marks perfect reproducibility (all replications choose the same 
 
 ## Statistical analysis
 
-To evaluate overall performance, we marginalised the posterior distributions of the three scores over different dimensions of the experimental design. For each draw from the posterior distribution, we computed the mean score across all levels of the variable(s) being marginalised away. This process yielded full posterior distributions for three complementary summaries:
+To evaluate overall performance, the posterior distributions of the three scores were marginalised over different dimensions of the experimental design. For each draw from the posterior distribution, the mean score was computed across all levels of the variable(s) being marginalised away. This process yielded full posterior distributions for three complementary summaries:
 
 1.  **Model-level estimates**, obtained by marginalising over items and prompting modalities.
 2.  **Prompting-modality estimates**, obtained by marginalising over items and models.
 3.  **Model-modality interaction estimates**, obtained by marginalising over items.
 
-From these marginalised distributions, we computed the posterior median as the point estimate of performance and the 95% quantile credible interval (CrI) for uncertainty quantification.
+From these marginalised distributions, the posterior median was computed as the point estimate of performance and the 95% quantile credible interval (CrI) for uncertainty quantification.
 
-To investigate the relationships between the different performance dimensions, we computed Spearman's rank correlation coefficients ($\rho_s$) between the model-level posterior scores for accuracy, parsing success, and consistency. The correlation was calculated separately for each draw from the posterior distribution, yielding a full posterior distribution for $\rho_s$ for each pair of metrics.
+To investigate the relationships between the different performance dimensions, Spearman's rank correlation coefficients ($\rho_s$) were computed between the model-level posterior scores for accuracy, parsing success, and consistency. The correlation was calculated separately for each draw from the posterior distribution, yielding a full posterior distribution for $\rho_s$ for each pair of metrics.
 
-Finally, we analysed the trade-off between model accuracy and financial cost. Model-level accuracy estimates were plotted against the provider's published price per million tokens. We identified the **Pareto frontier**, defined as the set of models for which no other model offered both higher accuracy and lower cost. To visualise the optimal trade-off, a logistic curve was fitted to the points on the frontier using a quasi-binomial generalised linear model.
+Finally, the trade-off between model accuracy and financial cost was analysed. Model-level accuracy estimates were plotted against the provider's published price per million tokens. The **Pareto frontier** was identified, defined as the set of models for which no other model offered both higher accuracy and lower cost. To visualise the optimal trade-off, a logistic curve was fitted to the points on the frontier using a quasi-binomial generalised linear model.
+
+All analyses were conducted using R v4.5.0. The code is available at <https://github.com/mattia-p/llm-travel-medicine>.
