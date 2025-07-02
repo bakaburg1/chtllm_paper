@@ -6,7 +6,7 @@ Authors@R: c(
     person("Francesco", "Baglivo", email = "francesco.baglivo@phd.unipi.it", role = "ctb"),
     person("Luigi", "De Angelis", email = "luigi.deangelis@phd.unipi.it", role = "ctb")
     )
-Description: A package to evaluate Large Language Models (LLMs) performance on
+Description: A study to evaluate Large Language Models (LLMs) performance on
     clinical travel health questions. It provides a framework to test different
     LLMs with various answering modalities and assess their performance.
 License: EUPL (>= 1.2)
