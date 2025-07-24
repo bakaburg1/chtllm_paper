@@ -1,4 +1,5 @@
 /.quarto/
 _targets.yaml
-*_files/
+methods_files/
+results_files/figure-html/
 *_cache/
