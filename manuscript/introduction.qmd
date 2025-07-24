@@ -1,0 +1,29 @@
+---
+title: "Introduction"
+format:
+  html:
+    toc: false
+    number-sections: false
+    html-math-method: mathjax
+bibliography: references.bib
+---
+
+# Introduction
+
+The rapid evolution of generative artificial intelligence (AI) is reshaping numerous areas of medicine. Large language models (LLMs) now demonstrate advanced capabilities in natural-language processing, reasoning, and potential clinical decision support ([@goh2024]). Prior research has primarily evaluated LLM performance across medical specialties using multiple-choice question (MCQ) assessments ([@kung2023]). However, travel medicine—a field characterized by dynamic epidemiological landscapes, region-specific risks, and evolving vaccine recommendations—remains underexplored in this context.
+
+Recent studies show that models such as GPT-4 perform well on high-stakes medical examinations, including the United States Medical Licensing Examination (USMLE) and subspecialty board exams ([@singhal2025]). Despite this progress, the application of LLMs to travel medicine has yet to be systematically assessed. While MCQs have recognized limitations as a benchmarking tool ([@mbakwe2023]), they provide a pragmatic starting point for comparing different LLMs and prompting strategies in this specialty. Future benchmarks could be expanded to include open-ended questions and clinical vignettes, more accurately reflecting the complexity of medical reasoning.
+
+One technique that consistently improves LLM performance is chain-of-thought reasoning, which prompts models to generate intermediate steps before selecting a final answer. Yet this strategy can increase inference time, encourage overthinking on simple tasks, and amplify confidence in incorrect answers ([@fu2025]). Such overconfidence has also been documented in medical contexts, raising concerns about the models' metacognitive reliability ([@ellabban2024]).
+
+In previous work, we proposed a “decalogue” of principles for the safe and effective use of generative AI in travel medicine ([@baglivo2024]). Although the field continues to evolve—with new reasoning strategies and domain-specific models emerging—these foundational principles remain pertinent. Establishing a dedicated benchmark for travel medicine is critical not only to assess current AI capabilities but also to inform model selection in line with these principles.
+
+This study is an initial step toward aligning technological innovation with clinical needs in travel medicine. By developing a standardized evaluation framework, we aim to foster collaboration between the travel-medicine and AI communities and position the field as a proactive adopter of AI tools ([@flaherty2022]).
+
+## Objective of the Study
+
+The primary objective of this study is to evaluate and compare the performance of selected LLMs on multiple-choice questions (MCQs) drawn from a travel-medicine certification examination. Specifically, we aim to:
+
+- Assess the accuracy of diverse AI models in addressing travel-medicine scenarios.
+- Compare the performance of LLMs with and without explicit reasoning (chain-of-thought) in answering travel-medicine MCQs with multiple prompts.
+- Establish a foundational benchmark to evaluate state-of-the-art models in travel medicine.

@@ -3,7 +3,10 @@ title: "Results"
 format:
   html:
     embed-resources: true
-    toc: true
+    toc: false
+    number-sections: true
+  gfm:
+    toc: false
     number-sections: true
 execute:
   echo: false

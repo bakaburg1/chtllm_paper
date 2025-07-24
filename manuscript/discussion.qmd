@@ -1,0 +1,51 @@
+---
+title: "Discussion"
+format:
+  html:
+    toc: false
+    number-sections: false
+    html-math-method: mathjax
+bibliography: references.bib
+---
+
+
+## Discussion
+
+Large language models (LLMs) released in 2024-2025 demonstrate a decisive leap in domain competence.
+In our evaluation, the best‐performing families, OpenAI o‑series, Google Gemini 2·5 Pro, and Perplexity Sonar Reasoning, achieved performances around 95 - 98% on the travel‑medicine benchmark.
+Published evidence reinforces this trend: a recent public‑health assessment found that frontier systems exceeded 90% accuracy on 23 global‑health benchmarks [@google2025globalhealth].
+These scores approach professional‑certification thresholds, confirming the trend already observed for general medical examinations, where GPT‑4 and Med‑PaLM 2 routinely exceed 85% accuracy on the MedQA and USMLE datasets [@kung2023usmle; @towards2023medpalm2; @liu2024meta]. Differently from most works in the field, our benchmarking was performed using multilevel Bayesian models, which provide some level of regularisation and generalisation beyond the specific set of questions [@gelman2007multilevel; @burkner2017brms].
+
+Prompting conditions continued to influence accuracy, yet with diminishing returns at the top end. Chain‑of‑thought (CoT) prompts modestly improved mid‑tier models, echoing earlier demonstrations that explicit reasoning benefits smaller or less specialised LLMs [@tam2024cot].
+However, model size and characteristics are the main performance drivers. Intrinsically reasoning models such as o3 and Gemini 2·5 Pro which are trained to reason internally before answering outperform all other models in our benchmark, independent of the prompting conditions.
+This observation suggests that, for high‑capacity systems, performance may now be limited more by pre‑training coverage and alignment than by surface prompt engineering.
+Incorporating external knowledge—or grounding answers in real‑time search as Perplexity Sonar does—offers an alternative avenue for gains: the Sonar model equalled OpenAi systems while operating at markedly lower cost,highlighting the value of real time data access for knowledge based tasks [@perplexity2024sonar].
+
+Open‑source innovations are closing the gap with proprietary systems. Llama‑3 70B‑Instruct and Mixtral 8×22B surpassed 95% accuracy in our benchmark while operating at roughly one‑quarter the cost of GPT‑4 [@touvron2024llama3; @mitchell2024mixtral]. Mistral 7B‑MoE, despite its compact footprint, cleared the 90% threshold with sub‑second latency, underscoring the power of Mixture‑of‑Experts routing and community‑driven fine‑tuning [@jiang2024mistralmoe]. Retrieval‑augmented generation amplifies these gains: coupling Mixtral 8×22B with Perplexity's live‑search layer pushed accuracy to 97% and delivered source‑linked justifications, features essential for clinical auditing [@perplexity2025rag].
+
+High benchmark scores translate into clinically meaningful competence.
+It has been shown that GPT‑4, now considered an "old model", already answers real‑world patient questions with higher factual accuracy than physicians in controlled settings [@jamainternal2023chatbot], and achieves decision‑support parity with specialists in emergency ophthalmology [@vrdoljak2025ophtho].
+More focusing on travel-medicine, early evidence from a Mayo Clinic pilot shows that LLMs produced actionable itineraries with notable improvements when using enhanced knowledge bases and refined prompting [@ohoro2025travel].
+Furthermore, patient surveys report strong trust and satisfaction and even preference over human physicians given chatbots provide more empathic language [@chen2025empathy].
+
+Travel medicine poses unique demands: geographically variable prophylaxis, dynamic outbreak data and a spectrum of tropical pathogens seldom covered in Western curricula.
+Prior anecdotal audits found that ChatGPT offered broadly correct but generic advice [@choudhary2023friend], prompting calls for structured development standards.
+Baglivo and De Angelis recently proposed a *decalogue* for safe travel‑health chatbots, emphasising source transparency and region‑specific updates [@baglivo2024decalogue].
+Our rigorous, question‑level evaluation supports their optimism: modern LLMs, especially those augmented with live search, can match specialist knowledge on canonical items while keeping output costs manageable.
+
+Nevertheless, the present study has two main limitations. First, although the benchmark captures diverse scenarios, we cannot exclude that some question‑answer pairs were present in the LLMs' pre‑training data.
+Future work should incorporate sequestered, newly written items or adversarially generated cases to probe genuine reasoning and up‑to‑date synthesis.
+Second, our analysis focused on multiple‑choice accuracy; real consultations require personalised risk stratification and shared‑decision support, tasks that warrant separate evaluation.
+Third, model fluency in languages other than English remains untested here and is crucial for equitable global deployment.
+
+# Conclusion
+
+The sharp rise in medical accuracy—from sub‑60% for early GPT‑3 to near‑98% for 2025‑era models—signals a turning point.
+Health systems and public‑health agencies should recognise LLMs as emerging allies for patient safety, capable of reinforcing guideline adherence, supporting clinicians in low‑resource settings and expanding access to pre‑travel advice.
+Realising this potential will require ongoing auditing, transparent reporting of model updates and integration with epidemiological surveillance, yet our findings indicate that the knowledge foundations are already in place.
+
+---
+
+### References
+
+```
