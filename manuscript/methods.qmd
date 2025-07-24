@@ -79,20 +79,20 @@ $$
 Y_i &\sim \text{Binomial}(T_i, \pi_i)\\[15pt]
 
 \textcolor{gray}{\text{Linear model:}}&\\
-\operatorname{logit}(\pi_i) &=
+\text{logit}(\pi_i) &=
   \underbrace{\alpha_{\text{model}[i]}}_{\text{baseline rate per model}}
   +\;\underbrace{\beta_{\text{model}[i]}\,\text{prompt}_i}_{\text{prompt effect varies by model}}
   +\;\underbrace{u_{\text{item}[i]}}_{\text{baseline rate per item}}\\[15pt]
 
 \textcolor{gray}{\text{Random effects structure:}}&\\
-\begin{pmatrix}\alpha_{\text{model}}\\\beta_{\text{model}}\end{pmatrix} &\sim \operatorname{MVNormal}(\mathbf{0}, \Sigma_{\mathrm{model}})\\
+\begin{pmatrix}\alpha_{\text{model}}\\\beta_{\text{model}}\end{pmatrix} &\sim \text{MVNormal}(\mathbf{0}, \Sigma_{\mathrm{model}})\\
 \Sigma_{\mathrm{model}} &=
   \begin{bmatrix} \sigma_\alpha & 0 \\ 0 & \sigma_\beta \end{bmatrix} \mathbf R \begin{bmatrix} \sigma_\alpha & 0 \\ 0 & \sigma_\beta \end{bmatrix}\\
- u_{\text{item}} &\sim \operatorname{Normal}(0, \sigma_{\mathrm{item}})\\[15pt]
+ u_{\text{item}} &\sim \text{Normal}(0, \sigma_{\mathrm{item}})\\[15pt]
 
 \textcolor{gray}{\text{Priors:}}&\\
  \sigma_\alpha, \sigma_\beta, \sigma_{\mathrm{item}} &\sim \mathrm{StudentT}^+_{3}(0, 1.5)\\
- R_{\mathrm{model}} &\sim \operatorname{LKJcorr}(2)
+ R_{\mathrm{model}} &\sim \text{LKJcorr}(2)
 \end{aligned}
 $$
 
@@ -116,15 +116,15 @@ $Y_n\in\{0,1,2\}$ encoding parsing success was considered, with:
 Let $n = 1, \dots, N$ index individual replications. The ordinal outcome $Y_n \in \{0,1,2\}$ was modelled using a cumulative logit formulation with two ordered thresholds, $\kappa_0 < \kappa_1$:
 
 $$
-  \Pr(Y_n \le c) = \operatorname{logit}^{-1}(\kappa_c - \eta_n), \qquad c \in \{0,1\}.
+  \Pr(Y_n \le c) = \text{logit}^{-1}(\kappa_c - \eta_n), \qquad c \in \{0,1\}.
 $$
 
 The two cumulative probabilities imply three probabilities, one per parsing category:
 
 \begin{aligned}
-\pi_{n0} &= \operatorname{logit}^{-1}(\kappa_0 - \eta_n), \\
-\pi_{n1} &= \operatorname{logit}^{-1}(\kappa_1 - \eta_n) - \operatorname{logit}^{-1}(\kappa_0 - \eta_n), \\
-\pi_{n2} &= 1 - \operatorname{logit}^{-1}(\kappa_1 - \eta_n).
+\pi_{n0} &= \text{logit}^{-1}(\kappa_0 - \eta_n), \\
+\pi_{n1} &= \text{logit}^{-1}(\kappa_1 - \eta_n) - \text{logit}^{-1}(\kappa_0 - \eta_n), \\
+\pi_{n2} &= 1 - \text{logit}^{-1}(\kappa_1 - \eta_n).
 \end{aligned}
 
 The linear predictor $\eta_n$ formulation and priors were identical to those adopted for the accuracy model.
@@ -152,7 +152,7 @@ The count $d_i$ was treated as the number of "successes" in an
 improper binomial experiment with $T=5$ trials:
 
 $$
-  d_i \sim \operatorname{Binomial}(5,\,\rho_i).
+  d_i \sim \text{Binomial}(5,\,\rho_i).
 $$
 
 Although the independence assumption is not strictly satisfied, since two identical answers in the same cell reduce the chance of further distinct letters, the binomial likelihood nevertheless provides a convenient monotone link between $\rho_i$ and the degree of variability; the resulting uncertainty is therefore somewhat underestimated.

@@ -144,7 +144,7 @@ $Y_n \in \{0,1,2\}$ was modelled using a cumulative logit formulation
 with two ordered thresholds, $\kappa_0 &lt; \kappa_1$:
 
 $$
-  \Pr(Y_n \le c) = \operatorname{logit}^{-1}(\kappa_c - \eta_n), \qquad c \in \{0,1\}.
+  \Pr(Y_n \le c) = \text{logit}^{-1}(\kappa_c - \eta_n), \qquad c \in \{0,1\}.
 $$
 
 The two cumulative probabilities imply three probabilities, one per
@@ -180,7 +180,7 @@ The count $d_i$ was treated as the number of “successes” in an improper
 binomial experiment with $T=5$ trials:
 
 $$
-  d_i \sim \operatorname{Binomial}(5,\,\rho_i).
+  d_i \sim \text{Binomial}(5,\,\rho_i).
 $$
 
 Although the independence assumption is not strictly satisfied, since
