@@ -2,9 +2,12 @@
 title: "Methods"
 format:
   html:
-    toc: true
+    toc: false
     number-sections: true
     html-math-method: mathjax
+  gfm:
+    toc: false
+    number-sections: true
 bibliography: references.bib
 execute:
   echo: false
