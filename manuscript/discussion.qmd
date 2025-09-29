@@ -9,7 +9,7 @@ bibliography: references.bib
 ---
 
 
-## Discussion
+# Discussion
 
 Large language models (LLMs) released in 2024-2025 demonstrate a decisive leap in domain competence.
 In our evaluation, the best‐performing families, OpenAI o‑series, Google Gemini 2·5 Pro, and Perplexity Sonar Reasoning, achieved performances around 95 - 98% on the travel‑medicine benchmark.
@@ -21,7 +21,7 @@ However, model size and characteristics are the main performance drivers. Intrin
 This observation suggests that, for high‑capacity systems, performance may now be limited more by pre‑training coverage and alignment than by surface prompt engineering.
 Incorporating external knowledge—or grounding answers in real‑time search as Perplexity Sonar does—offers an alternative avenue for gains: the Sonar model equalled OpenAi systems while operating at markedly lower cost,highlighting the value of real time data access for knowledge based tasks [@perplexity2024sonar].
 
-Open‑source innovations are closing the gap with proprietary systems. Llama‑3 70B‑Instruct and Mixtral 8×22B surpassed 95% accuracy in our benchmark while operating at roughly one‑quarter the cost of GPT‑4 [@touvron2024llama3; @mitchell2024mixtral]. Mistral 7B‑MoE, despite its compact footprint, cleared the 90% threshold with sub‑second latency, underscoring the power of Mixture‑of‑Experts routing and community‑driven fine‑tuning [@jiang2024mistralmoe]. Retrieval‑augmented generation amplifies these gains: coupling Mixtral 8×22B with Perplexity's live‑search layer pushed accuracy to 97% and delivered source‑linked justifications, features essential for clinical auditing [@perplexity2025rag].
+Open‑source innovations are closing the gap with proprietary systems. Llama-4, DeepSeek-R1, and MistralAI models reached > 90% accuracy in our benchmark while operating at a fraction of the cost of larger proprietary models. Retrieval‑augmented generation amplifies these gains: coupling DeepSeek-R1 with Perplexity's live‑search (Perplexity Sonar Reasoning model) pushed accuracy to 97% and delivered source‑linked justifications, features essential for clinical auditing.
 
 High benchmark scores translate into clinically meaningful competence.
 It has been shown that GPT‑4, now considered an "old model", already answers real‑world patient questions with higher factual accuracy than physicians in controlled settings [@jamainternal2023chatbot], and achieves decision‑support parity with specialists in emergency ophthalmology [@vrdoljak2025ophtho].
@@ -43,9 +43,3 @@ Third, model fluency in languages other than English remains untested here and i
 The sharp rise in medical accuracy—from sub‑60% for early GPT‑3 to near‑98% for 2025‑era models—signals a turning point.
 Health systems and public‑health agencies should recognise LLMs as emerging allies for patient safety, capable of reinforcing guideline adherence, supporting clinicians in low‑resource settings and expanding access to pre‑travel advice.
 Realising this potential will require ongoing auditing, transparent reporting of model updates and integration with epidemiological surveillance, yet our findings indicate that the knowledge foundations are already in place.
-
----
-
-### References
-
-```
