@@ -1,0 +1,23 @@
+---
+title: "Performance of Large Language Models on travel medicine certificate multiple choice questions"
+format:
+  docx:
+    toc: false
+    number-sections: true
+bibliography: references.bib
+execute:
+  echo: false
+  message: false
+  warning: false
+---
+
+
+{{< include introduction.qmd >}}
+
+{{< include methods.qmd >}}
+
+{{< include results.qmd >}}
+
+{{< include discussion.qmd >}}
+
+# References
