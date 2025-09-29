@@ -1,5 +1,9 @@
 /.quarto/
 _targets.yaml
 methods_files/
-results_files/figure-html/
+results_files/
+manuscript_files/
 *_cache/
+
+# Word temporary files
+~$*
