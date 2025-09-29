@@ -14,7 +14,7 @@ execute:
   warning: false
 ---
 
-```{r setup}
+```{r setup_results}
 # Locate the targets data store in the project root
 library(targets)
 library(dplyr)
@@ -30,6 +30,8 @@ targets::tar_source(here::here("R"))
 targets::tar_config_set(store = here::here("_targets"))
 
 ```
+
+# Results
 
 ## Performance overview and key drivers {#overall-performance}
 
