@@ -657,12 +657,12 @@ list(
       by_modality = plot_summaries(
         summaries = summaries_correctness_by_modality,
         group = "modality",
-        title = "Effect of prompting modality on accuracy"
+        title = "Effect of prompt strategy on accuracy"
       ),
       interaction = plot_summaries(
         summaries = summaries_correctness_interaction,
         group = "interaction",
-        title = "Model × modality interaction for accuracy"
+        title = "Model × prompt strategy interaction for accuracy"
       )
     )
   ),
@@ -678,12 +678,12 @@ list(
       by_modality = plot_summaries(
         summaries = summaries_parsing_by_modality,
         group = "modality",
-        title = "Effect of prompting modality on parsing success"
+        title = "Effect of prompt strategy on parsing success"
       ),
       interaction = plot_summaries(
         summaries = summaries_parsing_interaction,
         group = "interaction",
-        title = "Model × modality interaction for parsing success"
+        title = "Model × prompt strategy interaction for parsing success"
       )
     )
   ),
@@ -699,12 +699,12 @@ list(
       by_modality = plot_summaries(
         summaries = summaries_consistency_by_modality,
         group = "modality",
-        title = "Effect of prompting modality on consistency"
+        title = "Effect of prompt strategy on consistency"
       ),
       interaction = plot_summaries(
         summaries = summaries_consistency_interaction,
         group = "interaction",
-        title = "Model × modality interaction for consistency"
+        title = "Model × prompt strategy interaction for consistency"
       )
     )
   ),

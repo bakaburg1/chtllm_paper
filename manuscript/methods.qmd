@@ -39,25 +39,25 @@ n_combos <- targets::tar_load(results) |> nrow()
 
 A comparative evaluation of large-language models (LLMs) was conducted on a domain-specific benchmark of travel-medicine questions. Each model was asked to solve the same set of multiple-choice travel-medicine clinical vignettes under distinct prompting conditions. Performance was assessed across three complementary dimensions—accuracy, adherence to the required answer format, and internal consistency—using a fully reproducible analysis pipeline.
 
-The benchmark comprised `r n_questions` single-best-answer questions representative of real-world scenarios encountered in travel health practice. Items were collated from freely accessible online repositories, chiefly the sample question banks curated by the International Society of Travel Medicine ([https://www.istmfoundation.net/cth_samplequestions](https://www.istmfoundation.net/cth_samplequestions)) and the American Society of Tropical Medicine and Hygiene certificate programme ([https://www.astmh.org/education-resources/certificate-programs](https://www.astmh.org/education-resources/certificate-programs)). They covered diagnosis, prevention, and therapeutic decision-making for parasitic, bacterial, and viral conditions.
+The benchmark comprised `r n_questions` single-best-answer questions representative of real-world scenarios encountered in travel health practice. Items were collected from freely accessible online repositories, mainly from the sample question banks curated by the International Society of Travel Medicine ([https://www.istmfoundation.net/cth_samplequestions](https://www.istmfoundation.net/cth_samplequestions)) and the American Society of Tropical Medicine and Hygiene certificate programme ([https://www.astmh.org/education-resources/certificate-programs](https://www.astmh.org/education-resources/certificate-programs)). They covered diagnosis, prevention, and therapeutic decision-making for parasitic, bacterial, and viral conditions. Each question has four options denoted by the letters A, B, C, and D, one of which is correct.
 The question list is reported in Supplementary Table X.
 
 ## Large language models
 
-A total of `r n_models` large language models were selected to reflect the breadth of contemporary the technology. The sample included proprietary frontier systems (for example, OpenAI o3, Google Gemini 2·5 Pro, Anthropic Claude 3·5 Sonnet), high-performance hosted deployments of open-source models, and locally executed, quantised replicas suitable for desktop-class hardware. These local models ran offline on a MacBook Pro equipped with an Apple M1 Pro processor and 32 GB of unified memory, using LM Studio as the inference interface (<https://lmstudio.ai/docs/basics>) and the MLX runtime (<https://github.com/apple/mlx>) for model execution. Where applicable, the most recent public checkpoints were queried through their native application-programming interfaces. Temperature was fixed at 0·5 for all calls to balance determinism with variability; OpenAI's o-series models ignore this parameter by design. The list of models is reported in Supplementary Table X.
+A total of `r n_models` LLMs were selected, including proprietary frontier systems (for example, OpenAI o3, Google Gemini 2.5 Pro, Anthropic Claude 3.5 Sonnet), high-performance hosted deployments of open-source models (for example, served by Groq Inc.), and locally executed, quantised replicas suitable for desktop-class hardware. The local models were run offline on a Apple MacBook Pro equipped with an Apple M1 Pro processor and 32 GB of unified memory, using LM Studio as the inference interface (<https://lmstudio.ai/docs/basics>) and the MLX runtime (<https://github.com/apple/mlx>) for model execution. Where applicable, the most recent public checkpoints were queried through their native application-programming interfaces. Temperature was fixed at 0.5 for all calls to balance determinism with variability; temperature was not set for OpenAI's o-series models, which ignore this parameter by design. The list of models is reported in Supplementary Table X.
 
 ## Experimental procedure
 
-Three prompting strategies were investigated:
+LLM performance is notoriously affected by the prompting strategy used to query the model [@brown2020, @tam2024, @wei2022]. Therefore, we tested the LLMs under three distinct prompting conditions:
 
 1. **Concise answer** (`cold`) - the model was instructed to reply with a single letter corresponding to the chosen option.
 2. **Free explanation** (`free`) - a brief rationale was permitted provided the response ended with the option letter. This approach is supported by work showing that allowing language models to verbalise a short explanation can boost accuracy [@tam2024].
-3. **Chain-of-thought** (`reasoning`) - the model was invited to articulate its reasoning step by step before stating the final answer. Chain-of-thought prompting is a well-established strategy for eliciting reasoning in large language models [@wei2022].
+3. **Chain-of-thought** (`reasoning`) - the model was invited to articulate its reasoning step by step before stating the final answer. Chain-of-thought prompting is a well-established strategy for eliciting reasoning in large language models not specifically trained for it [@wei2022].
 
-Models whose decoding stack already includes an internal chain-of-thought module—such as OpenAI's o-series, DeepSeek R1, and certain Gemini variants—were exempted from the third modality to avoid redundancy. These systems are trained to perform latent deliberation at inference time, a strategy empirically shown to enhance answer quality and cost-efficiency [@snell2024; @deepseek2025].
+Models whose decoding stack already includes an internal chain-of-thought module, such as OpenAI's o-series, DeepSeek R1, and certain Gemini variants, were exempted from the third prompt strategy to avoid redundancy. These systems are trained to perform latent deliberation at inference time, a strategy empirically shown to enhance answer quality at the cost of extra computation [@snell2024; @deepseek2025].
 
-Every combination of question, model, and prompting condition was tested five times, yielding `r scales::comma(n_combos)` interactions.
-Each response was processed programmatically to extract the final option letter, as well as to record processing time and token consumption. If the response format did not permit automatic extraction, a secondary parsing step was performed using the large language model gemini-2.0-flash-001. Responses that remained unparseable after this secondary step were classified as unparseable.
+Every combination of question, model, and prompting condition was tested five times to account for the inherent variability of the decoding step in the LLM architecture, yielding a total of `r scales::comma(n_combos)` interactions.
+Each response was processed programmatically to extract the final option letter, as well as to record processing time and token consumption. If the response format did not permit automatic extraction, a secondary parsing step was performed using the LLM gemini-2.0-flash-001. Responses that remained unparseable after this secondary step were classified as unparseable.
 
 Responses were matched against the correct answer and classified into four mutually exclusive categories: correct, incorrect, unparseable (no valid option detected), and generation error. Additionally, correct and incorrect responses were annotated according to whether they were directly machine-parsable or required secondary parsing by a large language model.
 
@@ -65,7 +65,7 @@ Responses were matched against the correct answer and classified into four mutua
 
 The classification results were analysed with three multilevel Bayesian models, covering three metrics: accuracy, parsing success, and consistency.
 The Bayesian modelling approach has the advantage of providing more generalisable results compared to crude descriptive statistics, making the results less dependent on the specific sample of questions used.
-All models were fitted in Stan through the *brms* interface and included a random intercept for items, a random intercept by model, as well as a random slope for the interaction between prompting modality and model.
+All models were fitted in Stan [@stan] through the *brms* [@brms] interface and included a random intercept for items, a random intercept by model, as well as a random slope for the interaction between prompt strategy and model.
 Variance components were assigned weakly-informative Student-t priors with three degrees of freedom and scale 1.5, whereas correlation matrices were given an LKJ prior with shape parameter 2, which gently shrinks correlations towards zero [@gelman2006; @lkjprior].
 Two Hamiltonian Monte Carlo chains were run for 4 000 iterations (1 000 warm-up) and convergence was assessed with $\hat R (< 1.01)$ and effective sample sizes.
 
@@ -177,9 +177,9 @@ so that $C_i=1$ marks perfect reproducibility (all replications choose the same 
 
 To evaluate overall performance, the posterior distributions of the three scores were marginalised over different dimensions of the experimental design. For each draw from the posterior distribution, the mean score was computed across all levels of the variable(s) being marginalised away. This process yielded full posterior distributions for three complementary summaries:
 
-1.  **Model-level estimates**, obtained by marginalising over items and prompting modalities.
-2.  **Prompting-modality estimates**, obtained by marginalising over items and models.
-3.  **Model-modality interaction estimates**, obtained by marginalising over items.
+1.  **Model-level estimates**, obtained by marginalising over items and prompt strategies.
+2.  **Prompt-strategy estimates**, obtained by marginalising over items and models.
+3.  **Model–prompt strategy interaction estimates**, obtained by marginalising over items.
 
 From these marginalised distributions, the posterior median was computed as the point estimate of performance and the 95% quantile credible interval (CrI) for uncertainty quantification.
 

@@ -46,7 +46,7 @@ correctness_plots$by_model
 ```
 
 ```{r fig-modality-correctness}
-#| fig-cap: "Effect of prompting modality on model accuracy. Points show the posterior median and bars the 95% credible intervals."
+#| fig-cap: "Effect of prompt strategy on model accuracy. Points show the posterior median and bars the 95% credible intervals."
 #| fig-width: 8
 #| fig-height: 6
 
@@ -96,7 +96,7 @@ acc_gpt4o_search    <- get_mod("gpt-4o-search")
 
 worst_model <- acc_by_model |> tail(1)
 
-# Prompt modality summaries
+# Prompt strategy summaries
 
 get_mod <- \(type, mod) acc_by_modality |>
   filter(.data$model_type == type, .data$modality == mod)
@@ -120,7 +120,7 @@ Within provider families, accuracy climbed with successive iterations: OpenAI's 
 
 Search augmentation helped when well integrated: *Sonar-Reasoning* (a DeepSeek-R1 finetune with search capabilities) surpassed its base model ({acc_sonar$prob} vs {acc_deepseek_remote$prob}), whereas the search-enabled GPT-4o variant underperformed the base ({acc_gpt4o_search$prob} vs {acc_gpt4o$prob}).
 
-Prompting altered these figures only marginally (@fig-modality-correctness). Classic models improved from {acc_classic_cold$prob} with a **cold** prompt to {acc_classic_reason$prob} under explicit reasoning instructions, whereas reasoning models performed best with the concise **cold** prompt ({acc_reasoning_cold$prob} vs {acc_reasoning_free$prob} for a *free* prompt). But the largest performance gap was between reasoning models and classics, independent of prompt modality.
+Prompting altered these figures only marginally (@fig-modality-correctness). Classic models improved from {acc_classic_cold$prob} with a **cold** prompt to {acc_classic_reason$prob} under explicit reasoning instructions, whereas reasoning models performed best with the concise **cold** prompt ({acc_reasoning_cold$prob} vs {acc_reasoning_free$prob} for a *free* prompt). But the largest performance gap was between reasoning models and classics, independent of prompt strategy.
 ```
 
 ## Parsability of responses and consistency {#parsability-consistency}
@@ -136,11 +136,15 @@ targets::tar_load(parsing_plots)
 targets::tar_load(consistency_plots)
 
 # Combine the two ggplot objects side-by-side and share legend
-parsing_plots$by_model +
-  labs(title = "A. Parsing success") +
-  consistency_plots$by_model +
-  labs(title = "B. Answer consistency") +
-  plot_layout(guides = "collect") +
+p_parsing <- parsing_plots$by_model + labs(title = "A. Parsing success")
+p_consistency <- consistency_plots$by_model + labs(title = "B. Answer consistency")
+
+patchwork::wrap_plots(
+  p_parsing,
+  p_consistency,
+  ncol = 2,
+  guides = "collect"
+) +
   plot_annotation(theme = theme(legend.position = "bottom"))
 ```
 
@@ -272,13 +276,13 @@ targets::tar_load(correctness_vs_consistency_plot)
 
 
 ```{epoxy parsability-text}
-Most models followed formatting instructions and produced the expected output format, which allowed for automated parsing of the answers ([@fig-metrics]A). Parsability exceeded 90% for {num_high_parse} of the {num_models} systems evaluated. The distribution was decidedly bimodal: at one extreme, large high-performing frontier models such as `o3` ({parse_o3$prob}), `gemini-2.5-pro` ({parse_gempro$prob}), and `deepseek-r1` ({parse_deepseek$prob}) yielded perfect rates well above 95%; at the other, small locally-running models showed a strong drop in parsability, achieving barely half that rate with scores around 50%.
+Most models followed formatting instructions and produced the expected output format, which allowed for automated parsing of the answers ([@fig-metrics]A). Parsability exceeded 90% for {num_high_parse} of the {num_models} models we evaluated. The distribution was decidedly bimodal: at one extreme, large high-performing frontier models such as `o3` ({parse_o3$prob}), `gemini-2.5-pro` ({parse_gempro$prob}), and `deepseek-r1` ({parse_deepseek$prob}) yielded rates well above 95%; at the other, small locally-running models showed a strong drop in parsability, achieving barely half that rate with scores around 50%.
 
 In general, accuracy and instruction-following were moderately correlated (r = {cp_med}; 95% CrI {cp_lower}-{cp_upper}). However, a well-structured output did not guarantee correctness. When plotted against each other ([@fig-cross-metrics]A), the models divided into four groups: the best models dominated the upper-right (accurate and well-formed) quadrant, while notable exceptions populated the off-diagonal quadrants. For example, GPT-4o Mini and Claude 3.5 Haiku attained an almost perfect parse rate but underperformed in terms of accuracy; on the other hand, Perplexity Sonar Reasoning was extremely reliable in providing correct answers but had more difficulties in following formatting instructions.
 
 Response consistency was also generally good, ranging from {cons_min$prob} (`{cons_min$model_id}`) to {cons_max$prob} (`{cons_max$model_id}`) ([@fig-metrics]B).
 The correlation between accuracy and consistency was expectedly high ($\rho_s$ = {cc_med}; 95% CrI {cc_lower}-{cc_upper}; [@fig-cross-metrics]B): large reasoning models dominated the high-accuracy, high-consistency quadrant (upper-right) while mostly incorrect and unstable models populated the bottom-right.
-Very few models were in the top-left quadrant (mostly smaller versions of high-performing models, such as o4-mini and Claude 3.5 "Haiku", but also Llama 4 "Scout") or the bottom-right quadrant (models inconsistently right, notably two search-enabled models, Perplexity Sonar Large and GPT-4o-search).
+Very few models were in the top-left quadrant (mostly smaller versions of high-performing models, such as o4-mini and Claude 3.5 "Haiku", but also Llama 4 "Scout") or the bottom-right quadrant (accurate but inconsistent models, notably two search-enabled models, Perplexity Sonar Large and GPT-4o-search).
 ```
 
 ## Cost-accuracy trade-off {#cost-accuracy}
@@ -458,11 +462,11 @@ opt_D_txt <- stringr::str_trunc(stringr::str_squish(opts$option_D), 60)
 ```
 
 ```{epoxy item-text}
-Per-question model performance was highly heterogeneous ([@fig-item-mosaic]). Median accuracy spanned from {item_hard_prob} for the hardest prompt (item {item_hard_id}, a neurological-symptoms scenario with a past exposure to center-west Africa rural setting, suggestive of Onchocerciasis) up to virtually perfect performance on the easiest trio ({easy_list}), covering routine travel-medicine advice and basic epidemiology.
+Per-question model performance was highly heterogeneous ([@fig-item-mosaic]). Median accuracy spanned from {item_hard_prob} for the hardest question (item {item_hard_id}, a neurological-symptoms scenario with a past exposure to center-west Africa rural setting, suggestive of Onchocerciasis) up to virtually perfect performance on the easiest trio ({easy_list}), covering routine travel-medicine advice and basic epidemiology.
 
-Only {correct_prop} of systems crossed the 50% posterior threshold on item {item_hard_id}. In the raw responses, option A ("{opt_A_txt}") was chosen {all_A}, D ("{opt_D_txt}") {all_D}, and the correct option C ("{opt_C_txt}") only {all_C}. *o3* was internally consistent yet wrong, selecting A in {o3_A} of its replications. The spread across alternatives indicates genuine uncertainty rather than a single systematic misconception. Notably, solution A is the first-line diagnostic approach for suspected Onchocerciasis.
+Only {correct_prop} of models crossed the 50% posterior threshold on item {item_hard_id}. In the raw responses, option A ("{opt_A_txt}") was chosen {all_A}, D ("{opt_D_txt}") {all_D}, and the correct option C ("{opt_C_txt}") only {all_C}. *o3* was internally consistent yet wrong, selecting A in {o3_A} of its replications. The spread across alternatives indicates genuine uncertainty rather than a single systematic misconception. Notably, solution A is the first-line diagnostic approach for suspected Onchocerciasis.
 
-Notably, for items #2 (diagnosis of suspected malaria with diarrheal symptoms) and #4 (treatment of fever and diarrhea), the second and third most challenging items after #26, the o3 model consistently provided correct responses, yet exhibited posterior medians (approximately 90% and 77%, respectively) far from a 100% success rate and with wider credible intervals. This pattern reflects the regularizing properties of the hierarchical Bayesian model, which exhibits increased uncertainty when a model's performance substantially deviates from the population average, as each question was modelled with its own intercept and no model/item interaction was included for better generalization.
+Moreover, for items #2 (diagnosis of suspected malaria with diarrheal symptoms) and #4 (treatment of fever and diarrhea), the second and third most challenging items after #26, the o3 model consistently provided correct responses, yet exhibited posterior medians (approximately 90% and 77%, respectively) far from a 100% success rate and with wider credible intervals. This pattern reflects the regularizing properties of the hierarchical Bayesian model, which exhibits increased uncertainty when a model's performance substantially deviates from the population average, as each question was modelled with its own intercept and no model/item interaction was included for better generalization.
 
-Conversely, items such as {easy_list} were solved by virtually all systems, indicating that a sizeable fraction of the benchmark targeted plain retrieval rather than complex reasoning. Variation (range of posterior medians) exceeded 90 percentage points for several mid-difficulty questions, underscoring that model architecture and scale interact strongly with item traits. Overall, a small subset of challenging prompts (e.g., items {hard_list}) accounted for the bulk of performance discrimination across models.
+Conversely, items such as {easy_list} were solved by virtually all models, indicating that a sizeable fraction of the benchmark targeted plain retrieval rather than complex reasoning. Variation (range of posterior medians) exceeded 90 percentage points for several mid-difficulty questions, underscoring that model architecture and scale interact strongly with item traits. Overall, a small subset of challenging prompts (e.g., items {hard_list}) accounted for the bulk of performance discrimination across models.
 ```

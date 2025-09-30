@@ -66,7 +66,7 @@ Three prompting strategies were investigated:
 
 Models whose decoding stack already includes an internal
 chain-of-thought module—such as OpenAI’s o-series, DeepSeek R1, and
-certain Gemini variants—were exempted from the third modality to avoid
+certain Gemini variants—were exempted from the third prompt strategy to avoid
 redundancy. These systems are trained to perform latent deliberation at
 inference time, a strategy empirically shown to enhance answer quality
 and cost-efficiency (Snell et al. 2024; DeepSeek-AI 2025).
@@ -97,7 +97,7 @@ statistics, making the results less dependent on the specific sample of
 questions used. All models were fitted in Stan through the *brms*
 interface and included a random intercept for items, a random intercept
 by model, as well as a random slope for the interaction between
-prompting modality and model. Variance components were assigned
+prompt strategy and model. Variance components were assigned
 weakly-informative Student-t priors with three degrees of freedom and
 scale 1.5, whereas correlation matrices were given an LKJ prior with
 shape parameter 2, which gently shrinks correlations towards zero
@@ -219,10 +219,10 @@ marginalised away. This process yielded full posterior distributions for
 three complementary summaries:
 
 1.  **Model-level estimates**, obtained by marginalising over items and
-    prompting modalities.
-2.  **Prompting-modality estimates**, obtained by marginalising over
+    prompt strategies.
+2.  **Prompt-strategy estimates**, obtained by marginalising over
     items and models.
-3.  **Model-modality interaction estimates**, obtained by marginalising
+3.  **Model–prompt strategy interaction estimates**, obtained by marginalising
     over items.
 
 From these marginalised distributions, the posterior median was computed

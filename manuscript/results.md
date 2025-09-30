@@ -26,7 +26,7 @@ intervals. Models are ordered by performance.
 
 ![](results_files/figure-commonmark/fig-modality-correctness-1.png)
 
-Figure 2: Effect of prompting modality on model accuracy. Points show
+Figure 2: Effect of prompt strategy on model accuracy. Points show
 the posterior median and bars the 95% credible intervals.
 
 </div>
@@ -72,7 +72,7 @@ Classic models improved from 79.7% with a **cold** prompt to 80.9% under
 explicit reasoning instructions, whereas reasoning models performed best
 with the concise **cold** prompt (84.3% vs 83.8% for a *free* prompt).
 But the largest performance gap was between reasoning models and
-classics, independent of prompt modality.
+classics, independent of prompt strategy.
 
 ## Parsability of responses and consistency
 
