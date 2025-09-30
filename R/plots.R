@@ -1,3 +1,9 @@
+# Consistent palette for model types across all plots
+.model_type_palette <- c(
+  classic = "#F0B429",
+  reasoning = "#8C1C13"
+)
+
 #' Create comprehensive summary plots
 #'
 #' Generates publication-ready plots for marginalized posterior summaries,
@@ -32,14 +38,6 @@ plot_summaries <- function(
       "Column{?s} {.var {missing_cols}} not found in `summaries`."
     )
   }
-
-  # Color palette for modalities
-  pal <- c(
-    cold = "lightblue",
-    free = "darkgoldenrod1",
-    reasoning = "darkred"
-  )
-
 
   # Prepare plot data
 
@@ -79,6 +77,26 @@ plot_summaries <- function(
       )
   }
 
+  has_model_type <- "model_type" %in% names(plot_data)
+  has_locality <- "locality" %in% names(plot_data)
+
+  if (has_model_type) {
+    plot_data <- plot_data |>
+      dplyr::mutate(
+        model_type = factor(
+          .data$model_type,
+          levels = names(.model_type_palette)
+        )
+      )
+  }
+
+  if (has_locality) {
+    plot_data <- plot_data |>
+      dplyr::mutate(
+        locality = factor(.data$locality, levels = c("API", "Local"))
+      )
+  }
+
   # Reorder models by posterior median score
 
   plot_data <- plot_data |>
@@ -106,30 +124,20 @@ plot_summaries <- function(
   }
 
   # Aesthetic mappings
-  if ("modality" %in% names(plot_data)) {
-    # Colour by modality; optionally shape by model_type if available
-    aes_args <- list(
-      x = quote(.data$.prob),
-      y = quote(.data[[x_var]]),
-      colour = quote(.data$modality)
-    )
-    if ("model_type" %in% names(plot_data)) {
-      aes_args$shape <- quote(.data$model_type)
-    }
-    gg <- gg + ggplot2::aes(!!!aes_args)
-  } else if (all(c("model_type", "locality") %in% names(plot_data))) {
-    # Colour by model_type, shape by locality (API vs Local)
-    gg <- gg +
-      ggplot2::aes(
-        x = .data$.prob,
-        y = .data[[x_var]],
-        colour = .data$model_type,
-        shape  = .data$locality
-      )
-  } else {
-    # Fallback - basic mapping without extra aesthetics
-    gg <- gg + ggplot2::aes(x = .data$.prob, y = .data[[x_var]])
+  aes_args <- list(
+    x = quote(.data$.prob),
+    y = quote(.data[[x_var]])
+  )
+
+  if (has_model_type) {
+    aes_args$colour <- quote(.data$model_type)
   }
+
+  if (has_locality && group != "modality") {
+    aes_args$shape <- quote(.data$locality)
+  }
+
+  gg <- gg + ggplot2::aes(!!!aes_args)
 
   # Error bars and points
   gg <- gg +
@@ -141,23 +149,17 @@ plot_summaries <- function(
     ggplot2::geom_point(position = dodge, size = 3)
 
   # Scales
-  if ("modality" %in% names(plot_data)) {
-    gg <- gg + ggplot2::scale_colour_manual(values = pal, name = "Modality")
-    if ("model_type" %in% names(plot_data)) {
-      gg <- gg + ggplot2::scale_shape_manual(
-        values = c("classic" = 16, "reasoning" = 17),
+  if (has_model_type) {
+    gg <- gg +
+      ggplot2::scale_colour_manual(
+        values = .model_type_palette,
+        labels = c(classic = "Classic", reasoning = "Reasoning"),
         name = "Model type"
       )
-    }
-  } else if (all(c("model_type","locality") %in% names(plot_data))) {
+  }
+
+  if (has_locality && group != "modality") {
     gg <- gg +
-      ggplot2::scale_color_manual(
-        values = c(
-          "classic" = "goldenrod1",
-          "reasoning" = "darkred"
-        ),
-        name = "Model type"
-      ) +
       ggplot2::scale_shape_manual(
         values = c("API" = 16, "Local" = 21),
         name = "Deployment"
@@ -176,6 +178,10 @@ plot_summaries <- function(
       title = title,
       subtitle = "Points: posterior median; bars: 95% CrI."
     )
+
+  if (group == "modality") {
+    gg <- gg + ggplot2::labs(y = "Prompt strategy")
+  }
 
   return(gg)
 }
@@ -211,9 +217,7 @@ plot_pareto_frontier <- function(
             model_id == "gemma-3" ~ 0.2,
             .default = .data$cost_per_mln
           ),
-          # Create categorical variables for visualization
-          is_local = if_else(.data$provider == "ollama", "(Local)", "(API)"),
-          model_type = stringr::str_to_title(.data$model_type)
+          deployment = if_else(.data$provider == "ollama", "Local", "API")
         ),
       by = "model_id"
     ) |>
@@ -230,12 +234,21 @@ plot_pareto_frontier <- function(
         .data$is_pareto,
         "Pareto frontier",
         "Other models"
+      ),
+      model_type = factor(
+        .data$model_type,
+        levels = names(.model_type_palette)
+      ),
+      deployment = factor(
+        .data$deployment,
+        levels = c("API", "Local")
       )
     ) |>
     select(-"max_accuracy_so_far")
 
   # Filter only models at the frontier
   pareto_models <- plot_data |> filter(.data$is_pareto)
+  non_pareto_models <- plot_data |> filter(!.data$is_pareto)
 
   # Create the plot
   plot_data |>
@@ -264,7 +277,7 @@ plot_pareto_frontier <- function(
       aes(linetype = "Fitted"),
       method = "glm",
       method.args = list(family = quasibinomial(link = "logit")),
-      color = "darkred",
+      color = .model_type_palette[["reasoning"]],
       linewidth = 0.8,
       fullrange = TRUE,
       se = FALSE
@@ -274,34 +287,58 @@ plot_pareto_frontier <- function(
       aes(
         ymin = .data$.lower,
         ymax = .data$.upper,
-        color = .data$frontier_status
+        colour = .data$model_type
       ),
       linewidth = 0.8,
-      alpha = 0.5
+      alpha = 0.6
     ) +
     # All models with aesthetic mappings for frontier, model type, and
     # deployment
     geom_point(
       aes(
-        color = .data$frontier_status,
-        shape = interaction(.data$model_type, .data$is_local, sep = " ")
+        colour = .data$model_type,
+        shape = .data$deployment
       ),
       size = 3
     ) +
-    # Add model labels for Pareto frontier points
     ggrepel::geom_label_repel(
-      data = plot_data, #|> filter(.data$is_pareto),
-      aes(label = .data$model_id, color = .data$frontier_status),
+      data = non_pareto_models,
+      inherit.aes = FALSE,
+      aes(
+        x = .data$cost_per_mln,
+        y = .data$accuracy,
+        label = .data$model_id
+      ),
       size = 3,
       box.padding = 0.5,
       point.padding = 0.3,
-      segment.alpha = 0.6
+      segment.alpha = 0.6,
+      colour = "black",
+      fill = "white",
+      show.legend = FALSE
     ) +
-    # Reverse legend order and override linetype legend
+    # Add model labels for Pareto frontier points
+    ggrepel::geom_label_repel(
+      data = pareto_models,
+      inherit.aes = FALSE,
+      aes(
+        x = .data$cost_per_mln,
+        y = .data$accuracy,
+        label = .data$model_id
+      ),
+      size = 3,
+      box.padding = 0.5,
+      point.padding = 0.3,
+      segment.alpha = 0.6,
+      colour = "white",
+      fill = "black",
+      show.legend = FALSE
+    ) +
     guides(
-      color = guide_legend(reverse = TRUE),
-      shape = guide_legend(reverse = TRUE),
+      colour = guide_legend(order = 1),
+      shape = guide_legend(order = 2),
       linetype = guide_legend(
+        order = 3,
         reverse = TRUE,
         override.aes = list(
           linewidth = 1,
@@ -312,17 +349,16 @@ plot_pareto_frontier <- function(
     # Transform the y-axis to a logit scale
     coord_trans(y = "logit") +
     # Manual scales for color, shape, and alpha
-    scale_color_manual(
-      values = c(
-        "Other models" = "darkgoldenrod1", "Pareto frontier" = "darkred")
-    ) +
     scale_shape_manual(
       values = c(
-        "Classic (API)" = 16,
-        "Reasoning (API)" = 17,
-        "Classic (Local)" = 21,
-        "Reasoning (Local)" = 24
+        "API" = 16,
+        "Local" = 21
       ),
+      name = "Deployment"
+    ) +
+    scale_colour_manual(
+      values = .model_type_palette,
+      labels = c(classic = "Classic", reasoning = "Reasoning"),
       name = "Model type"
     ) +
     # Add a legend for line types
@@ -346,9 +382,10 @@ plot_pareto_frontier <- function(
     ) +
     # Plot titles and theme
     labs(
-      x = "Cost per million tokens",
+      x = "Cost per million output tokens",
       y = "Accuracy",
-      color = NULL,
+      colour = "Model type",
+      shape = "Deployment",
       linetype = "Pareto frontier",
       title = "Pareto frontier: Model accuracy vs. cost efficiency",
       subtitle = "Optimal models balance high accuracy with low operational costs",
