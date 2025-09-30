@@ -43,7 +43,6 @@ plot_summaries <- function(
 
   plot_data <- summaries
 
-
   # Ensure model metadata is available when needed
 
   missing_meta <- setdiff(c("model_type", "provider"), names(plot_data))
@@ -104,7 +103,7 @@ plot_summaries <- function(
       # Re-order factors for nicer display when `model_id` is present.
       dplyr::across(
         .cols = dplyr::any_of("model_id"),
-        .fns  = ~ forcats::fct_reorder(.x, .data$.prob, .desc = FALSE)
+        .fns = ~ forcats::fct_reorder(.x, .data$.prob, .desc = FALSE)
       )
     )
 
@@ -210,7 +209,10 @@ plot_pareto_frontier <- function(
         select("model_id", "cost_per_mln", "model_type", "provider") |>
         mutate(
           cost_per_mln = if_else(
-            .data$cost_per_mln %in% c(NA, 0), 0.001, .data$cost_per_mln),
+            .data$cost_per_mln %in% c(NA, 0),
+            0.001,
+            .data$cost_per_mln
+          ),
           # Hack to avoid re-running the pipeline since gemma 3 is not free
           # anymore
           cost_per_mln = case_when(
@@ -242,13 +244,24 @@ plot_pareto_frontier <- function(
       deployment = factor(
         .data$deployment,
         levels = c("API", "Local")
+      ),
+      model_colour = unname(.model_type_palette[as.character(
+        .data$model_type
+      )]),
+      label_colour = dplyr::case_when(
+        .data$is_pareto ~ "white",
+        .data$model_type == "classic" ~ .model_type_palette["classic"],
+        .data$model_type == "reasoning" ~ .model_type_palette["reasoning"]
+      ),
+      label_fill = factor(
+        if_else(.data$is_pareto, "Pareto frontier", "Other models"),
+        levels = c("Pareto frontier", "Other models")
       )
     ) |>
     select(-"max_accuracy_so_far")
 
   # Filter only models at the frontier
   pareto_models <- plot_data |> filter(.data$is_pareto)
-  non_pareto_models <- plot_data |> filter(!.data$is_pareto)
 
   # Create the plot
   plot_data |>
@@ -270,7 +283,7 @@ plot_pareto_frontier <- function(
       alpha = .5
     ) +
     #  Add a 95% accuracy threshold line
-    geom_hline(yintercept = 0.95, linetype = "dashed", alpha = 0.8) +
+    geom_hline(yintercept = 0.95, linetype = "dashed", alpha = 0.5) +
     # Connect Pareto frontier with lines
     geom_smooth(
       data = pareto_models,
@@ -287,58 +300,42 @@ plot_pareto_frontier <- function(
       aes(
         ymin = .data$.lower,
         ymax = .data$.upper,
-        colour = .data$model_type
+        colour = .data$model_colour
       ),
       linewidth = 0.8,
-      alpha = 0.6
+      alpha = 0.6,
+      show.legend = FALSE
     ) +
-    # All models with aesthetic mappings for frontier, model type, and
-    # deployment
     geom_point(
       aes(
-        colour = .data$model_type,
+        colour = .data$model_colour,
         shape = .data$deployment
       ),
       size = 3
     ) +
     ggrepel::geom_label_repel(
-      data = non_pareto_models,
+      data = plot_data,
       inherit.aes = FALSE,
       aes(
         x = .data$cost_per_mln,
         y = .data$accuracy,
-        label = .data$model_id
+        label = .data$model_id,
+        fill = .data$label_fill,
+        colour = .data$label_colour
       ),
       size = 3,
       box.padding = 0.5,
       point.padding = 0.3,
       segment.alpha = 0.6,
-      colour = "black",
-      fill = "white",
-      show.legend = FALSE
+      show.legend = c(fill = TRUE, colour = FALSE)
     ) +
-    # Add model labels for Pareto frontier points
-    ggrepel::geom_label_repel(
-      data = pareto_models,
-      inherit.aes = FALSE,
-      aes(
-        x = .data$cost_per_mln,
-        y = .data$accuracy,
-        label = .data$model_id
-      ),
-      size = 3,
-      box.padding = 0.5,
-      point.padding = 0.3,
-      segment.alpha = 0.6,
-      colour = "white",
-      fill = "black",
-      show.legend = FALSE
-    ) +
+    # Transform the y-axis to a logit scale
+    coord_trans(y = "logit") +
+    # Fix guides look
     guides(
-      colour = guide_legend(order = 1),
       shape = guide_legend(order = 2),
       linetype = guide_legend(
-        order = 3,
+        order = 4,
         reverse = TRUE,
         override.aes = list(
           linewidth = 1,
@@ -346,8 +343,6 @@ plot_pareto_frontier <- function(
         )
       )
     ) +
-    # Transform the y-axis to a logit scale
-    coord_trans(y = "logit") +
     # Manual scales for color, shape, and alpha
     scale_shape_manual(
       values = c(
@@ -356,10 +351,25 @@ plot_pareto_frontier <- function(
       ),
       name = "Deployment"
     ) +
-    scale_colour_manual(
-      values = .model_type_palette,
-      labels = c(classic = "Classic", reasoning = "Reasoning"),
-      name = "Model type"
+    scale_colour_identity(
+      breaks = unname(.model_type_palette[c("classic", "reasoning")]),
+      labels = c("Classic", "Reasoning"),
+      guide = guide_legend(
+        title = "Model type",
+        order = 1,
+        override.aes = list(shape = 16, size = 3, fill = NA, linetype = 0)
+      )
+    ) +
+    scale_fill_manual(
+      values = c(
+        "Pareto frontier" = "black",
+        "Other models" = "white"
+      ) |>
+        scales::alpha(.75),
+      guide = guide_legend(
+        order = 3,
+        override.aes = list(label = "  ")
+      )
     ) +
     # Add a legend for line types
     scale_linetype_manual(
@@ -385,6 +395,7 @@ plot_pareto_frontier <- function(
       x = "Cost per million output tokens",
       y = "Accuracy",
       colour = "Model type",
+      fill = "Pareto status",
       shape = "Deployment",
       linetype = "Pareto frontier",
       title = "Pareto frontier: Model accuracy vs. cost efficiency",
