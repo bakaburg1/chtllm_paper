@@ -13,6 +13,7 @@ pkgs <- c(
   "forcats",
   "scales",
   "ggrepel",
+  "flextable",
   "gt",
   "epoxy"
 )
@@ -64,7 +65,9 @@ list(
     processed_dir,
     {
       path <- here::here("results", "processed")
-      if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+      if (!dir.exists(path)) {
+        dir.create(path, recursive = TRUE)
+      }
       path
     }
   ),
@@ -73,7 +76,9 @@ list(
     processing_dir,
     {
       path <- here::here("results", "processing")
-      if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+      if (!dir.exists(path)) {
+        dir.create(path, recursive = TRUE)
+      }
       path
     }
   ),
@@ -82,7 +87,9 @@ list(
     models_dir,
     {
       path <- here::here("models")
-      if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+      if (!dir.exists(path)) {
+        dir.create(path, recursive = TRUE)
+      }
       path
     }
   ),
@@ -91,7 +98,9 @@ list(
     outputs_dir,
     {
       path <- here::here("outputs")
-      if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+      if (!dir.exists(path)) {
+        dir.create(path, recursive = TRUE)
+      }
       path
     }
   ),
@@ -770,66 +779,55 @@ list(
 
   # Tables ----------
   tar_target(
-    table_correctness,
-    create_summary_table(
-      summaries = summaries_correctness_interaction,
-      metric_name = ".prob",
-      title = "Model Correctness",
-      subtitle = "Probability of generating the correct answer",
-      source_note = "Summaries are posterior medians with 95% CrIs.",
-      group_by_var = "modality"
+    table_model_performance,
+    create_model_performance_table(
+      correctness = summaries_correctness_by_model,
+      parsing = summaries_parsing_by_model,
+      consistency = summaries_consistency_by_model,
+      caption = "Median posterior accuracy, parsing success, and consistency by model."
     )
   ),
 
   tar_target(
-    table_parsing,
-    create_summary_table(
-      summaries = summaries_parsing_interaction,
-      metric_name = ".prob",
-      title = "Clean Parsing Rate",
-      subtitle = "Probability of responses being cleanly parsed (no fixes needed)",
-      source_note = "Summaries are posterior medians with 95% CrIs.",
-      group_by_var = "modality"
+    table_interaction_performance,
+    create_interaction_performance_table(
+      correctness_interaction = summaries_correctness_interaction,
+      parsing_interaction = summaries_parsing_interaction,
+      consistency_interaction = summaries_consistency_interaction,
+      caption = "Median posterior metrics by model and prompt strategy."
     )
   ),
 
   tar_target(
-    table_consistency,
+    table_accuracy_by_modality,
     create_summary_table(
-      summaries = summaries_consistency_interaction,
+      summaries = summaries_correctness_by_modality |>
+        dplyr::mutate(
+          modality = factor(
+            .data$modality,
+            levels = c("cold", "free", "reasoning")
+          )
+        ) |>
+        dplyr::arrange(.data$model_type, .data$modality),
       metric_name = ".prob",
-      title = "Response Consistency",
-      subtitle = "Score of 100% is perfect consistency, 0% is uniform inconsistency",
-      source_note = "Summaries are posterior medians with 95% CrIs.",
-      group_by_var = "modality"
+      caption = "Accuracy by prompt strategy and model type.",
+      merge_vars = "model_type",
+      label_overrides = list(
+        model_type = "Model type",
+        modality = "Prompt strategy",
+        estimate = "Accuracy",
+        ci = "95% CrI"
+      )
     )
   ),
 
-  # Save tables to files
   tar_target(
-    table_correctness_file,
-    save_gt_table(
-      table_correctness,
-      path = here::here("outputs", "tables", "correctness.html")
-    ),
-    format = "file"
+    table_questions,
+    create_questions_table(questions)
   ),
 
   tar_target(
-    table_parsing_file,
-    save_gt_table(
-      table_parsing,
-      path = here::here("outputs", "tables", "parsing.html")
-    ),
-    format = "file"
-  ),
-
-  tar_target(
-    table_consistency_file,
-    save_gt_table(
-      table_consistency,
-      path = here::here("outputs", "tables", "consistency.html")
-    ),
-    format = "file"
+    table_models,
+    create_models_table(models)
   )
 )

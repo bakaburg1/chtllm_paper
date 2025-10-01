@@ -76,7 +76,7 @@ Several helper targets turn the posterior summaries into publication-ready artef
 
 * `plot_summaries()` - faceted forest plots for each metric (accuracy, parsing, and the three consistency variants).
 * `plot_pareto_frontier()` - a two-objective plot that highlights trade-offs between accuracy and consistency at the model level.
-* `create_summary_table()` + `save_gt_table()` - nicely formatted `gt` tables saved under `outputs/tables/` (e.g. `accuracy.html`, `parsing.html`, `consistency.html`).
+* Flextable helpers such as `create_summary_table()`, `create_model_performance_table()`, and `create_interaction_performance_table()` for polished supplementary tables used directly in the manuscript.
 
 ### Correlation Analyses
 
