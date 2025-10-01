@@ -13,3 +13,5 @@
 ^.env$
 ^logs$
 ^models$
+^manuscript$
+_targets.yaml
