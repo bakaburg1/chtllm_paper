@@ -2,69 +2,64 @@
 % Please edit documentation in R/tables.R
 \name{create_summary_table}
 \alias{create_summary_table}
-\title{Create a publication-ready summary table using gt}
+\title{Create a flextable summary table for posterior estimates}
 \usage{
 create_summary_table(
   summaries,
   metric_name,
-  title,
-  subtitle,
-  source_note,
-  group_by_var = NULL
+  caption = NULL,
+  merge_vars = NULL,
+  label_overrides = list()
 )
 }
 \arguments{
-\item{summaries}{A data frame containing summarized data. It should have
-columns for model_id, modality (optional), a metric, and credible intervals
-(.lower, .upper).}
+\item{summaries}{A data frame containing posterior summaries with columns for
+the metric, lower bound (.lower), and upper bound (.upper)}
 
-\item{metric_name}{A character string for the primary metric column name.}
+\item{metric_name}{Character string specifying the name of the metric column
+in \code{summaries}}
 
-\item{title}{The main title for the table.}
+\item{caption}{Optional character string for table caption}
 
-\item{subtitle}{The subtitle for the table.}
+\item{merge_vars}{Optional character vector of column names to merge
+vertically in the table (useful for grouping rows)}
 
-\item{source_note}{A source note or caption for the table.}
-
-\item{group_by_var}{A variable to group and spanner-label the table by. Can
-be "modality" or NULL.}
+\item{label_overrides}{Named list of custom column labels to override
+defaults}
 }
 \value{
-A gt_tbl object.
+A flextable object with formatted posterior estimates
 }
 \description{
-Formats marginalized posterior summaries into a polished gt table, ready for
-publication or reporting.
+Creates a formatted flextable displaying posterior estimates with confidence
+intervals. The table includes percentage formatting and customizable headers.
+}
+\details{
+The function expects the input data frame to contain at minimum:
+\itemize{
+\item A column with the metric values (specified by \code{metric_name})
+\item \code{.lower} and \code{.upper} columns for confidence interval bounds
+}
+
+Default column labels can be overridden using the \code{label_overrides}
+parameter. The function automatically formats values as percentages and
+creates a confidence interval column.
 }
 \examples{
 \dontrun{
-# Create a correctness table grouped by modality
-correctness_table <- create_summary_table(
-  summaries = summaries_correctness_interaction,
-  metric_name = ".prob",
-  title = "Model Correctness",
-  subtitle = "Probability of generating the correct answer",
-  source_note = "Summaries are posterior medians with 95\% CrIs.",
-  group_by_var = "modality"
+# Basic usage
+create_summary_table(
+  summaries = posterior_data,
+  metric_name = "accuracy"
 )
 
-# Create a parsing quality table
-parsing_table <- create_summary_table(
-  summaries = summaries_parsing_interaction,
-  metric_name = ".prob",
-  title = "Clean Parsing Rate",
-  subtitle = "Probability of responses being cleanly parsed",
-  source_note = "Based on multinomial parsing model results.",
-  group_by_var = "modality"
-)
-
-# Create a simple table without grouping
-model_comparison <- create_summary_table(
-  summaries = summaries_correctness_by_model,
-  metric_name = ".prob",
-  title = "Model Performance Comparison",
-  subtitle = "Overall correctness across all modalities",
-  source_note = "Marginalized over prompting modalities."
+# With custom labels and merging
+create_summary_table(
+  summaries = posterior_data,
+  metric_name = "accuracy",
+  caption = "Model Performance Summary",
+  merge_vars = c("model_type"),
+  label_overrides = list(model_id = "Model Name")
 )
 }
 
