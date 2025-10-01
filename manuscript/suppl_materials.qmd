@@ -1,3 +1,161 @@
+---
+title: "Supplementary Materials"
+format:
+  docx:
+    toc: true
+    number-sections: false
+fig-dpi: 300
+bibliography: references.bib
+csl: vancouver.csl
+execute:
+  echo: false
+  message: false
+  warning: false
+---
+
+## Statistical models
+
+The classification results were analysed with three hierarchical Bayesian models, covering three metrics: accuracy, parsing success, and consistency. All models were fitted in Stan [@stan] through the brms interface [@brms] and included a random intercept for items, a random intercept by model, as well as a random slope for the interaction between prompt strategy and model. Variance components were assigned weakly‑informative Student‑t priors with three degrees of freedom and scale 1.5, whereas correlation matrices were given an LKJ prior with shape parameter 2, which gently shrinks correlations towards zero [@gelman2006; @lkjprior]. Two Hamiltonian Monte Carlo chains were run for 4,000 iterations (1,000 warm‑up) and convergence was assessed with R‑hat (< 1.01) and effective sample sizes.
+
+### Accuracy
+
+To measure accuracy, the probability of a correct response was estimated for each item, model, prompt combination over N replications.
+
+Let (i = 1, …, N) index each unique item, model, prompt combination. For each cell i, Y_i is the number of correct replications out of T_i trials. These counts were modelled with a binomial hierarchical model:
+
+::: {.content-visible when-format="html|pdf"}
+$$
+\begin{aligned}
+\textcolor{gray}{\text{Likelihood:}}&\\
+Y_i &\sim \mathrm{Binomial}(T_i,\ \pi_i)\\[15pt]
+\textcolor{gray}{\text{Linear model:}}&\\
+\operatorname{logit}(\pi_i) &= \alpha_{\mathrm{model}[i]} + \beta_{\mathrm{model}[i]}\,\mathrm{prompt}_i + u_{\mathrm{item}[i]}\\[15pt]
+\textcolor{gray}{\text{Random effects structure:}}&\\
+\begin{pmatrix}\alpha_{\mathrm{model}}\\\beta_{\mathrm{model}}\end{pmatrix} &\sim \mathrm{MVNormal}(\mathbf{0}, \Sigma_{\mathrm{model}})\\
+\Sigma_{\mathrm{model}} &= \begin{bmatrix}\sigma_\alpha & 0\\ 0 & \sigma_\beta\end{bmatrix}
+\mathbf{R}_{\mathrm{model}}
+\begin{bmatrix}\sigma_\alpha & 0\\ 0 & \sigma_\beta\end{bmatrix}\\
+u_{\mathrm{item}} &\sim \mathrm{Normal}(0,\ \sigma_{\mathrm{item}})\\[15pt]
+\textcolor{gray}{\text{Priors:}}&\\
+\sigma_\alpha,\ \sigma_\beta,\ \sigma_{\mathrm{item}} \sim \mathrm{StudentT}^{+}_{3}(0,\ 1.5)\\
+\mathbf{R}_{\mathrm{model}} \sim \mathrm{LKJcorr}(2)
+\end{aligned}
+$$
+:::
+
+::: {.content-visible when-format="docx"}
+**Likelihood.**
+
+$$
+Y_i \sim \mathrm{Binomial}(T_i,\ \pi_i)
+$$
+
+**Linear model.**
+
+$$
+\operatorname{logit}(\pi_i)
+= \alpha_{\mathrm{model}[i]}
++ \beta_{\mathrm{model}[i]}\,\mathrm{prompt}_i
++ u_{\mathrm{item}[i]}
+$$
+
+**Random effects structure.**
+
+$$
+\begin{pmatrix}\alpha_{\mathrm{model}}\\ \beta_{\mathrm{model}}\end{pmatrix}
+\sim \mathrm{MVNormal}\!\big(\mathbf{0},\ \Sigma_{\mathrm{model}}\big)
+$$
+
+$$
+\Sigma_{\mathrm{model}}
+= \begin{bmatrix}\sigma_\alpha & 0\\ 0 & \sigma_\beta\end{bmatrix}
+  \mathbf{R}_{\mathrm{model}}
+  \begin{bmatrix}\sigma_\alpha & 0\\ 0 & \sigma_\beta\end{bmatrix}
+$$
+
+$$
+u_{\mathrm{item}} \sim \mathrm{Normal}(0,\ \sigma_{\mathrm{item}})
+$$
+
+**Priors.**
+
+$$
+\sigma_\alpha,\ \sigma_\beta,\ \sigma_{\mathrm{item}}
+\sim \mathrm{StudentT}^{+}_{3}(0,\ 1.5)
+$$
+
+$$
+\mathbf{R}_{\mathrm{model}} \sim \mathrm{LKJcorr}(2)
+$$
+
+:::
+
+This model corresponds to the brms formula:
+
+`correct | trials(total) ~ 0 + (modality | model_id) + (1 | item)`
+
+with `family = binomial()` and with `model_id` being the model identifier, `modality` the prompting strategy, and `item` the question. Posterior samples of `pi_i` provide the accuracy score for each combination of model, question, and prompting strategy.
+
+### Parsing success
+
+To evaluate the reliability of the answer format, for every individual replication, an ordinal response `Y_n ∈ {0,1,2}` encoding parsing success was considered, with 0 (none) = parsing failed; 1 (rescued) = the answer needed parsing by an auxiliary LLM; 2 (clean) = parsed without intervention.
+
+Let `n = 1, …, N` index individual replications. The ordinal outcome `Y_n ∈ {0,1,2}` was modelled using a cumulative logit formulation with two ordered thresholds, `κ_0 < κ_1`:
+
+$$
+  \Pr(Y_n \le c) = \text{logit}^{-1}(\kappa_c - \eta_n), \qquad c \in \{0,1\}.
+$$
+
+The two cumulative probabilities imply three probabilities, one per parsing category:
+
+$$
+\begin{aligned}
+\pi_{n0} &= \operatorname{logit}^{-1}(\kappa_0 - \eta_n), \\
+\pi_{n1} &= \operatorname{logit}^{-1}(\kappa_1 - \eta_n) - \operatorname{logit}^{-1}(\kappa_0 - \eta_n), \\
+\pi_{n2} &= 1 - \operatorname{logit}^{-1}(\kappa_1 - \eta_n).
+\end{aligned}
+$$
+
+The linear predictor `η_n` formulation and priors were identical to those adopted for the accuracy model.
+
+This model corresponds to the brms call:
+
+`y ~ (prompt | model_id) + (1 | item)` with `family = cumulative("logit")`
+
+Posterior category probabilities `(π_n0, π_n1, π_n2)` derived from the model were condensed to a continuous parsing‑success score on the unit interval:
+
+$$
+  S_n = \frac{0\,\pi_{n0} + 1\,\pi_{n1} + 2\,\pi_{n2}}{2},
+$$
+
+so that `S_n = 1` denotes a certainly clean reply and `S_n = 0` a certainly none outcome.
+
+### Consistency
+
+Reproducibility was quantified by counting how many distinct options `d_i` were selected across the `T = 5` replications of each (question, model, prompt) cell, indexed by `i`. Because the possible answers are four (A, B, C, D), the observed range is `d_i ∈ {1,…,4}`.
+
+The count `d_i` was treated as the number of "successes" in an improper binomial experiment with `T = 5` trials:
+
+$$
+  d_i \sim \text{Binomial}(5,\,\rho_i).
+$$
+
+Although the independence assumption is not strictly satisfied, since two identical answers in the same cell reduce the chance of further distinct letters, the binomial likelihood nevertheless provides a convenient monotone link between `ρ_i` and the degree of variability; the resulting uncertainty is therefore somewhat underestimated. The distinct‑option rate followed the same hierarchical structure and priors as the accuracy model.
+
+This model corresponds to the brms call:
+
+`y | trials(total) ~ 0 + (modality | model_id) + (1 | item)` with `family = binomial()`
+
+Posterior draws for the expected number of distinct letters, `d̃_i = 5 ρ_i`, were converted to a unit‑interval consistency score by rescaling to the theoretical maximum of four distinct options:
+
+$$
+  C_i = 1-\frac{\tilde{d}_i}{4},
+$$
+
+so that `C_i = 1` marks perfect reproducibility (all replications choose the same letter) and `C_i = 0` corresponds to the extreme case in which all four options are observed within the five attempts.
+
+# Supplementary Tables
+
 ::: {.landscape}
 
 ```{r setup_suppl, include=FALSE}
@@ -43,7 +201,7 @@ table_models
 
 ## Supplementary Table S3. Model-level performance summary
 
-Median posterior accuracy, parsing success, and answer consistency for each model evaluated in @fig-overall-correctness and @fig-metrics. Cells report median posterior estimates with 95% credible intervals and are shaded with a two-colour gradient (bluer denotes better scores) within each metric.
+Median posterior accuracy, parsing success, and answer consistency for each model. Cells report median posterior estimates with 95% credible intervals and are shaded with a two-colour gradient (bluer denotes better scores) within each metric.
 
 ```{r table_performance_by_model}
 table_model_performance
@@ -63,7 +221,7 @@ table_interaction_performance
 
 ## Supplementary Table S5. Accuracy by prompt strategy
 
-Median posterior accuracy and 95% credible intervals by model type and prompt strategy, complementing @fig-modality-correctness.
+Median posterior accuracy and 95% credible intervals by model type and prompt strategy.
 
 ```{r table_accuracy_by_modality}
 table_accuracy_by_modality
