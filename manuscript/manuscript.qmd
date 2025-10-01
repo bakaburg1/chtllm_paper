@@ -3,15 +3,20 @@ title: "Performance of Large Language Models on travel medicine certificate mult
 format:
   docx:
     toc: false
-    number-sections: true
+    number-sections: false
 bibliography: references.bib
+csl: vancouver.csl
+fig-dpi: 300
 execute:
   echo: false
   message: false
   warning: false
 ---
 
-{{< include abstracts.md >}}
+# Abstract
+
+A set of forty Large Language Models (LLMs) were evaluated on a novel, single-best-answer benchmark in travel and tropical medicine compiled from high-quality, expert-curated sources. Models capabilities were estimated with a hierarchical Bayesian item-response model evaluating accuracy, consistency, parsability. Models' performance was also compared with provider-published costs. Median posterior accuracy spanned 27.9-97.5%; frontier systems from multiple vendors, including Perplexity Sonar-Reasoning, OpenAI o3/o1, Google Gemini-2.5-Pro, DeepSeek-R1, and Anthropic Claude-3.5-Sonnet, clustered at ≥95%, with the best model (OpenAI o3) reaching 97.5% (95% CrI: 95.9-98.6).
+Strong performance was associated with: (i) large parameter counts, (ii) explicit reasoning capabilities, and (iii) optionally, integrated search; successive iterations within the same model family correlated with improved scores. On the other end, small locally deployed models showed the worst performance, below 40%, apart from a 32B parameter distillation of DeepSeek-R1, which scored ~85%. Reproducibility was high (consistency up to 94.9%) and correlated strongly with accuracy (Spearman ρ≈0.75). On a cost-accuracy analysis, options ranged from ~US$2-8 per million tokens (e.g., DeepSeek-R1 ≈US$2.19; o3 ≈US$8 during the study window) to premium tiers (e.g., o1 ≈US$60) with o3 topping the Pareto frontier. Overall this study confirms the maturity of LLMs as support systems for travel and tropical medicine, especially for healthcare professionals.
 
 {{< include introduction.qmd >}}
 
@@ -22,3 +27,9 @@ execute:
 {{< include discussion.qmd >}}
 
 # References
+
+::: {#refs}
+:::
+
+
+{{< include suppl_materials.qmd >}}

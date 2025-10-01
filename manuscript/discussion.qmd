@@ -1,25 +1,14 @@
----
-title: "Discussion"
-format:
-  html:
-    toc: false
-    number-sections: false
-    html-math-method: mathjax
-bibliography: references.bib
----
-
-
 # Discussion
 
 Large language models (LLMs) released in 2024-2025 demonstrate a decisive leap in domain competence.
 In our evaluation, the best‐performing families, OpenAI o‑series, Google Gemini 2.5 Pro, and Perplexity Sonar Reasoning, achieved performances around 95%-98% on the travel‑medicine benchmark.
 Published evidence reinforces this trend: a recent public‑health assessment found that frontier systems exceeded 90% accuracy on 23 global‑health benchmarks [@google2025globalhealth].
-These scores approach professional‑certification thresholds, confirming the trend already observed for general medical examinations, where GPT‑4 and Med‑PaLM 2 routinely exceed 85% accuracy on the MedQA and USMLE datasets [@kung2023usmle; @towards2023medpalm2; @liu2024meta]. Differently from most works in the field, our benchmarking was performed using multilevel Bayesian models, which provide some level of regularisation and generalisation beyond the specific set of questions [@gelman2007multilevel; @burkner2017brms].
+These scores approach professional‑certification thresholds, confirming the trend already observed for general medical examinations, where GPT‑4 and Med‑PaLM 2 routinely exceed 85% accuracy on the MedQA and USMLE datasets [@kung2023usmle; @towards2023medpalm2; @liu2024meta]. Differently from most works in the field, our benchmarking was performed using multilevel Bayesian models, which provide some level of regularisation and generalisation beyond the specific set of questions [@gelman2007multilevel; @brms].
 
 Prompting conditions continued to influence accuracy, yet with diminishing returns at the top end. Chain‑of‑thought (CoT) prompts modestly improved mid‑tier models, echoing earlier demonstrations that explicit reasoning benefits smaller or less specialised LLMs [@tam2024cot].
 However, model size and characteristics were the main performance drivers. Intrinsically reasoning models such as o3 and Gemini 2.5 Pro, which are trained to reason internally before answering, outperformed all other models in our benchmark, independent of the prompting conditions.
 This observation suggests that, for high‑capacity systems, performance may now be limited more by pre‑training coverage and alignment than by surface prompt engineering.
-Incorporating external knowledge, or grounding answers in real‑time search as Perplexity Sonar does, offers an alternative avenue for gains: the Sonar model equalled OpenAi systems while operating at markedly lower cost,highlighting the value of real time data access for knowledge-based tasks [@perplexity2024sonar].
+Incorporating external knowledge, or grounding answers in real‑time search as Perplexity Sonar does, offers an alternative avenue for gains: the Sonar model equalled OpenAI systems while operating at markedly lower cost, highlighting the value of real-time data access for knowledge-based tasks [@perplexity2024sonar].
 
 Open‑source innovations are closing the gap with proprietary systems. Llama-4, DeepSeek-R1, and MistralAI models reached > 90% accuracy in our benchmark while operating at a fraction of the cost of larger proprietary models. Retrieval‑augmented generation amplifies these gains: coupling DeepSeek-R1 with Perplexity's live‑search (Perplexity Sonar Reasoning model) pushed accuracy to 97% and delivered source‑linked justifications, features essential for clinical auditing.
 
@@ -28,20 +17,26 @@ While smaller, local models still tend to underperform, the 32-B DeepSeek R1 dis
 High benchmark scores translate into clinically meaningful competence.
 It has been shown that GPT‑4, now considered an "old model", already answers real‑world patient questions with higher factual accuracy than physicians in controlled settings [@jamainternal2023chatbot], and achieves decision‑support parity with specialists in emergency ophthalmology [@vrdoljak2025ophtho].
 Focusing on travel-medicine, early evidence from a Mayo Clinic pilot shows that LLMs produced actionable travel-medicine advice with notable improvements when using enhanced knowledge bases and refined prompting [@ohoro2025travel].
-Furthermore, patient surveys report strong trust and satisfaction and even preference over human physicians, that given chatbots provide more empathic language [@chen2025empathy].
+Furthermore, patient surveys report strong trust and satisfaction and even preference over human physicians because chatbots used more empathic language [@chen2025empathy].
 
 Travel medicine poses unique demands: geographically variable prophylaxis, dynamic outbreak data and a spectrum of tropical pathogens seldom covered in Western curricula.
 Prior anecdotal audits found that ChatGPT offered broadly correct but generic advice [@choudhary2023friend], prompting calls for structured development standards.
-Baglivo et al. recently proposed a *decalogue* for safe travel‑health chatbots, emphasising source transparency and region‑specific updates [@baglivo2024decalogue].
-Our rigorous, question‑level evaluation supports their optimism: modern LLMs, especially those augmented with live search, can match specialist knowledge on canonical items while keeping output costs manageable.
+Baglivo et al. recently proposed a *decalogue* for safe travel‑health chatbots, emphasising source transparency and region‑specific updates [@baglivo2024decalogue].\
+Our rigorous, question‑level evaluation provides further evidence: modern LLMs, especially state-of-art reasoning models or models augmented with live internet search, can match specialist knowledge on canonical items.
 
-Nevertheless, the present study has two main limitations. First, although the benchmark captures diverse scenarios, we cannot exclude that some question‑answer pairs were present in the LLMs' pre‑training data.
-Future work should incorporate sequestered, newly written items or adversarially generated cases to probe genuine reasoning and up‑to‑date synthesis.
-Second, our analysis focused on multiple‑choice accuracy; real consultations require personalised risk stratification and shared‑decision support, tasks that warrant separate evaluation.
+Nevertheless, the present study has three main limitations. First, although the benchmark captures diverse scenarios, we cannot exclude that some question‑answer pairs were present in the LLMs' pre‑training data, de facto posing a threat to generalisation to novel questions.
+Future work should incorporate newly written items or adversarially generated cases to better assess whether models can truly handle novel scenarios, beyond those potentially seen during training.\
+Second, our analysis focused on multiple‑choice accuracy, a very simplified scenario; real consultations require personalised risk stratification and shared‑decision support, tasks that warrant separate evaluation. A clear expansion of the study would be testing performance in more realistic human-machine interaction scenarios.\
 Third, model fluency in languages other than English remains untested here and is crucial for equitable global deployment.
+
+Finally, not really a limitation, the set of models we evaluated is not exhaustive and will likely be outdated by the time this manuscript is published, as newer and higher-performing models continue to emerge.
 
 # Conclusion
 
-The sharp rise in medical accuracy—from sub‑60% for early GPT‑3 to near‑98% for 2025‑era models—signals a turning point.
+The sharp rise in medical accuracy, from sub‑60% for early GPT‑3 to near‑98% for 2025‑era models, signals a turning point.\
 Health systems and public‑health agencies should recognise LLMs as emerging allies for patient safety, capable of reinforcing guideline adherence, supporting clinicians in low‑resource settings and expanding access to pre‑travel advice.
 Realising this potential will require ongoing auditing, transparent reporting of model updates and integration with epidemiological surveillance, yet our findings indicate that the knowledge foundations are already in place.
+
+# Acknowledgments
+
+OpenAI's ChatGPT, using multiple models, was utilized to assist in writing this manuscript and in developing the code used to generate the results. All ideas and methodologies presented are solely those of the authors.

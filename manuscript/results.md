@@ -1,14 +1,7 @@
 # Results
 
 
-- [<span class="toc-section-number">1</span> Performance overview and
-  key drivers](#overall-performance)
-- [<span class="toc-section-number">2</span> Parsability of responses
-  and consistency](#parsability-consistency)
-- [<span class="toc-section-number">3</span> Cost-accuracy
-  trade-off](#cost-accuracy)
-- [<span class="toc-section-number">4</span> Item-level
-  analysis](#item-analysis)
+# Results
 
 ## Performance overview and key drivers
 
@@ -26,8 +19,8 @@ intervals. Models are ordered by performance.
 
 ![](results_files/figure-commonmark/fig-modality-correctness-1.png)
 
-Figure 2: Effect of prompt strategy on model accuracy. Points show
-the posterior median and bars the 95% credible intervals.
+Figure 2: Effect of prompt strategy on model accuracy. Points show the
+posterior median and bars the 95% credible intervals.
 
 </div>
 
@@ -103,10 +96,10 @@ based on median performance.
 Most models followed formatting instructions and produced the expected
 output format, which allowed for automated parsing of the answers
 (<a href="#fig-metrics" class="quarto-xref">Figure 3</a>A). Parsability
-exceeded 90% for 30 of the 40 systems evaluated. The distribution was
+exceeded 90% for 30 of the 40 models we evaluated. The distribution was
 decidedly bimodal: at one extreme, large high-performing frontier models
 such as `o3` (100.0%), `gemini-2.5-pro` (99.9%), and `deepseek-r1`
-(100.0%) yielded perfect rates well above 95%; at the other, small
+(100.0%) yielded rates well above 95%; at the other, small
 locally-running models showed a strong drop in parsability, achieving
 barely half that rate with scores around 50%.
 
@@ -133,7 +126,7 @@ reasoning models dominated the high-accuracy, high-consistency quadrant
 bottom-right. Very few models were in the top-left quadrant (mostly
 smaller versions of high-performing models, such as o4-mini and Claude
 3.5 “Haiku”, but also Llama 4 “Scout”) or the bottom-right quadrant
-(models inconsistently right, notably two search-enabled models,
+(accurate but inconsistent models, notably two search-enabled models,
 Perplexity Sonar Large and GPT-4o-search).
 
 ## Cost-accuracy trade-off
@@ -190,14 +183,14 @@ intensity reflects correctness, and transparency indicates certainty
 
 Per-question model performance was highly heterogeneous
 (<a href="#fig-item-mosaic" class="quarto-xref">Figure 6</a>). Median
-accuracy spanned from 17.5% for the hardest prompt (item 26, a
+accuracy spanned from 17.5% for the hardest question (item 26, a
 neurological-symptoms scenario with a past exposure to center-west
 Africa rural setting, suggestive of Onchocerciasis) up to virtually
 perfect performance on the easiest trio (#39 (99.1%), \#8 (99.2%), \#32
 (99.4%)), covering routine travel-medicine advice and basic
 epidemiology.
 
-Only 12% of systems crossed the 50% posterior threshold on item 26. In
+Only 12% of models crossed the 50% posterior threshold on item 26. In
 the raw responses, option A (“Skin snips”) was chosen 40%, D
 (“Giemsa-stained smears of blood drawn at night”) 32%, and the correct
 option C (“Antifilarial antibody levels”) only 23%. *o3* was internally
@@ -206,7 +199,7 @@ spread across alternatives indicates genuine uncertainty rather than a
 single systematic misconception. Notably, solution A is the first-line
 diagnostic approach for suspected Onchocerciasis.
 
-Notably, for items \#2 (diagnosis of suspected malaria with diarrheal
+Moreover, for items \#2 (diagnosis of suspected malaria with diarrheal
 symptoms) and \#4 (treatment of fever and diarrhea), the second and
 third most challenging items after \#26, the o3 model consistently
 provided correct responses, yet exhibited posterior medians
@@ -219,7 +212,7 @@ its own intercept and no model/item interaction was included for better
 generalization.
 
 Conversely, items such as \#39 (99.1%), \#8 (99.2%), \#32 (99.4%) were
-solved by virtually all systems, indicating that a sizeable fraction of
+solved by virtually all models, indicating that a sizeable fraction of
 the benchmark targeted plain retrieval rather than complex reasoning.
 Variation (range of posterior medians) exceeded 90 percentage points for
 several mid-difficulty questions, underscoring that model architecture

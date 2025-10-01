@@ -30,7 +30,7 @@ American Society of Tropical Medicine and Hygiene certificate programme
 (<https: www.astmh.org="" education-resources="" certificate-programs="">). They
 covered diagnosis, prevention, and therapeutic decision-making for
 parasitic, bacterial, and viral conditions. The question list is
-reported in Supplementary Table X.
+reported in Supplementary Table S1.
 
 ## Large language models
 
@@ -47,7 +47,7 @@ applicable, the most recent public checkpoints were queried through
 their native application-programming interfaces. Temperature was fixed
 at 0·5 for all calls to balance determinism with variability; OpenAI’s
 o-series models ignore this parameter by design. The list of models is
-reported in Supplementary Table X.
+reported in Supplementary Table S2.
 
 ## Experimental procedure
 

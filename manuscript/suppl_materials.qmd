@@ -1,0 +1,72 @@
+::: {.landscape}
+
+```{r setup_suppl, include=FALSE}
+library(targets)
+library(dplyr)
+library(gt)
+library(flextable)
+library(scales)
+
+targets::tar_config_set(store = here::here("_targets"))
+
+targets::tar_load(c(
+  table_questions,
+  table_models,
+  table_model_performance,
+  table_interaction_performance,
+  table_accuracy_by_modality
+))
+```
+
+# Supplementary Tables
+
+## Supplementary Table S1. Travel-medicine benchmark items
+
+Complete list of the multiple‑choice questions used in the travel‑medicine benchmark. For each item we report the source collection (International Society of Travel Medicine sample questions (CTH) or American Society of Tropical Medicine and Hygiene Certificate Programs sample questions (ASTMH)), the full question, and the four answer options (A-D) exactly as published. The correct answer is highlighted in green.
+
+```{r table_questions_code}
+table_questions
+```
+
+{{< pagebreak >}}
+
+## Supplementary Table S2. Large language model configurations
+
+This table lists all language models evaluated in the study. For each model we report the provider, the deployment/endpoint name, model type (reasoning or classic), the provider's published price per million tokens (USD) at the time of testing, and whether the deployment exposed built‑in web/search capability.
+
+```{r table_models}
+table_models
+```
+
+
+{{< pagebreak >}}
+
+## Supplementary Table S3. Model-level performance summary
+
+Median posterior accuracy, parsing success, and answer consistency for each model evaluated in @fig-overall-correctness and @fig-metrics. Cells report median posterior estimates with 95% credible intervals and are shaded with a two-colour gradient (bluer denotes better scores) within each metric.
+
+```{r table_performance_by_model}
+table_model_performance
+```
+
+{{< pagebreak >}}
+
+## Supplementary Table S4. Model × prompt interaction
+
+Median posterior accuracy, parsing success, and answer consistency by model and prompt strategy. Rows are sorted by accuracy (median) in descending order.
+
+```{r table_interaction_performance}
+table_interaction_performance
+```
+
+{{< pagebreak >}}
+
+## Supplementary Table S5. Accuracy by prompt strategy
+
+Median posterior accuracy and 95% credible intervals by model type and prompt strategy, complementing @fig-modality-correctness.
+
+```{r table_accuracy_by_modality}
+table_accuracy_by_modality
+```
+
+:::

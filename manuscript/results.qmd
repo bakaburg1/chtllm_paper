@@ -1,18 +1,3 @@
----
-title: "Results"
-format:
-  html:
-    embed-resources: true
-    toc: false
-    number-sections: true
-  gfm:
-    toc: false
-    number-sections: true
-execute:
-  echo: false
-  message: false
-  warning: false
----
 
 ```{r setup_results}
 # Locate the targets data store in the project root
@@ -38,7 +23,7 @@ targets::tar_config_set(store = here::here("_targets"))
 ```{r fig-overall-correctness}
 #| fig-cap: "Model accuracy on the travel-medicine benchmark. Points show the posterior median accuracy, with bars representing the 95% credible intervals. Models are ordered by performance."
 #| fig-width: 8
-#| fig-height: 7
+#| fig-height: 8
 
 # Retrieve the forest plot object
 targets::tar_load(correctness_plots)
@@ -47,7 +32,7 @@ correctness_plots$by_model
 
 ```{r fig-modality-correctness}
 #| fig-cap: "Effect of prompt strategy on model accuracy. Points show the posterior median and bars the 95% credible intervals."
-#| fig-width: 8
+#| fig-width: 7
 #| fig-height: 6
 
 correctness_plots$by_modality
@@ -108,19 +93,18 @@ acc_reasoning_free <- get_mod("reasoning", "free")
 ```
 
 ```{epoxy performance-text}
-Across the 40 large-language models evaluated, posterior accuracy ranged from {acc_o3$prob} [{acc_o3$ci}] for OpenAI's o3 to {worst_model$prob} [{worst_model$ci}] for the smallest local replica (`{worst_model$model_id}`) (@fig-overall-correctness).
-
-Large parameter count reasoning models dominated: in addition to o3, o1 {acc_o1$prob} [{acc_o1$ci}], Perplexity *Sonar-Reasoning* {acc_sonar$prob} [{acc_sonar$ci}], and Gemini-2.5-Pro {acc_gempro$prob} [{acc_gempro$ci}] were among the top performers.
-
+Across the 40 large-language models evaluated, posterior accuracy ranged from {acc_o3$prob} [{acc_o3$ci}] for OpenAI's o3 to {worst_model$prob} [{worst_model$ci}] for the smallest local replica (`{worst_model$model_id}`) (@fig-overall-correctness).\
+Detailed median posterior performance metrics for each model are reported in Supplementary Table S3.\
+Large parameter count reasoning models dominated: in addition to o3, o1 {acc_o1$prob} [{acc_o1$ci}], Perplexity *Sonar-Reasoning* {acc_sonar$prob} [{acc_sonar$ci}], and Gemini-2.5-Pro {acc_gempro$prob} [{acc_gempro$ci}] were among the top performers.\
 Instruction-tuned classics plateaued roughly {round((acc_gempro$.prob - acc_gpt4o$.prob) * 100, 1)} percentage points lower, led by GPT-4o {acc_gpt4o$prob} [{acc_gpt4o$ci}] and Mistral-Large-2411 {acc_mistral$prob} [{acc_mistral$ci}].
 
 Local models performed overall worse, mostly due to limits in deployable sizes that restricted deployment to very small models (e.g., 1.5B parameters). The smallest 1.5B quantization languished at {worst_model$prob} [{worst_model$ci}]. The largest deployable size on the researchers' machines was a 32B Qwen distillation of DeepSeek-R1, which achieved {acc_deepseek_local$prob} [{acc_deepseek_local$ci}] but nevertheless performed slightly worse than the same model accessed via the Groq API ({acc_deepseek_remote$prob} [{acc_deepseek_remote$ci}]), probably due to the aggressive quantization (4-bit) necessary to make it fit in memory.
 
-Within provider families, accuracy climbed with successive iterations: OpenAI's line rose from GPT-4o {acc_gpt4o$prob} [{acc_gpt4o$ci}] through o1 {acc_o1$prob} [{acc_o1$ci}] to o3 {acc_o3$prob} [{acc_o3$ci}]; Google's advanced from Gemini-Flash {acc_gemflash$prob} [{acc_gemflash$ci}] to Gemini-Pro {acc_gempro$prob} [{acc_gempro$ci}]. Similar improvements were observed for LLama and Mistral models.
+Within provider families, accuracy climbed with successive iterations: OpenAI's line rose from GPT-4o {acc_gpt4o$prob} [{acc_gpt4o$ci}] through o1 {acc_o1$prob} [{acc_o1$ci}] to o3 {acc_o3$prob} [{acc_o3$ci}]; Google's advanced from Gemini-Flash {acc_gemflash$prob} [{acc_gemflash$ci}] to Gemini-Pro {acc_gempro$prob} [{acc_gempro$ci}]. Similar improvements were observed for Llama and Mistral models.
 
 Search augmentation helped when well integrated: *Sonar-Reasoning* (a DeepSeek-R1 finetune with search capabilities) surpassed its base model ({acc_sonar$prob} vs {acc_deepseek_remote$prob}), whereas the search-enabled GPT-4o variant underperformed the base ({acc_gpt4o_search$prob} vs {acc_gpt4o$prob}).
 
-Prompting altered these figures only marginally (@fig-modality-correctness). Classic models improved from {acc_classic_cold$prob} with a **cold** prompt to {acc_classic_reason$prob} under explicit reasoning instructions, whereas reasoning models performed best with the concise **cold** prompt ({acc_reasoning_cold$prob} vs {acc_reasoning_free$prob} for a *free* prompt). But the largest performance gap was between reasoning models and classics, independent of prompt strategy.
+Prompting altered these figures only marginally (@fig-modality-correctness); detailed prompt-by-model-type estimates are shown in Supplementary Table S4 and S5. Classic models improved from {acc_classic_cold$prob} with a **cold** prompt to {acc_classic_reason$prob} under explicit reasoning instructions, whereas reasoning models performed best with the concise **cold** prompt ({acc_reasoning_cold$prob} vs {acc_reasoning_free$prob} for a *free* prompt). But the largest performance gap was between reasoning models and classics, independent of prompt strategy.
 ```
 
 ## Parsability of responses and consistency {#parsability-consistency}
@@ -276,11 +260,13 @@ targets::tar_load(correctness_vs_consistency_plot)
 
 
 ```{epoxy parsability-text}
-Most models followed formatting instructions and produced the expected output format, which allowed for automated parsing of the answers ([@fig-metrics]A). Parsability exceeded 90% for {num_high_parse} of the {num_models} models we evaluated. The distribution was decidedly bimodal: at one extreme, large high-performing frontier models such as `o3` ({parse_o3$prob}), `gemini-2.5-pro` ({parse_gempro$prob}), and `deepseek-r1` ({parse_deepseek$prob}) yielded rates well above 95%; at the other, small locally-running models showed a strong drop in parsability, achieving barely half that rate with scores around 50%.
+Most models followed formatting instructions and produced the expected output format, which allowed for automated parsing of the answers ([@fig-metrics]A). Parsability exceeded 90% for {num_high_parse} of the {num_models} models we evaluated. The distribution was decidedly bimodal: at one extreme, large high-performing frontier models such as `o3` ({parse_o3$prob}), `gemini-2.5-pro` ({parse_gempro$prob}), and `deepseek-r1` ({parse_deepseek$prob}) yielded rates well above 95%; at the other, small locally-running models showed a strong drop in parsability, achieving barely half that rate with scores around 50%.\
+Supplementary Table S3 reports the full set of posterior estimates.
 
 In general, accuracy and instruction-following were moderately correlated (r = {cp_med}; 95% CrI {cp_lower}-{cp_upper}). However, a well-structured output did not guarantee correctness. When plotted against each other ([@fig-cross-metrics]A), the models divided into four groups: the best models dominated the upper-right (accurate and well-formed) quadrant, while notable exceptions populated the off-diagonal quadrants. For example, GPT-4o Mini and Claude 3.5 Haiku attained an almost perfect parse rate but underperformed in terms of accuracy; on the other hand, Perplexity Sonar Reasoning was extremely reliable in providing correct answers but had more difficulties in following formatting instructions.
 
-Response consistency was also generally good, ranging from {cons_min$prob} (`{cons_min$model_id}`) to {cons_max$prob} (`{cons_max$model_id}`) ([@fig-metrics]B).
+Response consistency was also generally good, ranging from {cons_min$prob} (`{cons_min$model_id}`) to {cons_max$prob} (`{cons_max$model_id}`) ([@fig-metrics]B).\
+Supplementary Table S3 tabulates the posterior consistency estimates for each model.
 The correlation between accuracy and consistency was expectedly high ($\rho_s$ = {cc_med}; 95% CrI {cc_lower}-{cc_upper}; [@fig-cross-metrics]B): large reasoning models dominated the high-accuracy, high-consistency quadrant (upper-right) while mostly incorrect and unstable models populated the bottom-right.
 Very few models were in the top-left quadrant (mostly smaller versions of high-performing models, such as o4-mini and Claude 3.5 "Haiku", but also Llama 4 "Scout") or the bottom-right quadrant (accurate but inconsistent models, notably two search-enabled models, Perplexity Sonar Large and GPT-4o-search).
 ```
@@ -389,8 +375,7 @@ pct <- scales::label_percent(accuracy = 0.1)
 
 # Derive item-level medians across models
 item_difficulty <- summaries_correctness_by_model_item |>
-  dplyr::group_by(item) |>
-  dplyr::summarise(med = median(.prob), .groups = "drop") |>
+  dplyr::summarise(med = median(.prob), .by = "item") |>
   dplyr::arrange(med)
 
 # Identify hardest and easiest items
@@ -413,8 +398,8 @@ item_hard_prob <- pct(hard_items$med[1])
 
 # Calculate proportion of models likely correct (>0.5 posterior) for reference
 correct_prop <- summaries_correctness_by_model_item |>
-  dplyr::filter(item == item_hard_id) |>
-  dplyr::summarise(prop = mean(.prob > 0.5)) |>
+  dplyr::filter(.data$item == item_hard_id) |>
+  dplyr::summarise(prop = mean(.data$.prob > 0.5)) |>
   dplyr::pull(prop) |>
   scales::percent(accuracy = 1)
 
@@ -433,13 +418,13 @@ results_raw <- readr::read_csv(
 )
 
 ans_dist <- results_raw |>
-  dplyr::filter(item == item_hard_id) |>
+  dplyr::filter(.data$item == item_hard_id) |>
   dplyr::mutate(answer_clean = stringr::str_extract(answer, "[A-D]")) |>
   dplyr::count(answer_clean, name = "n") |>
   dplyr::mutate(pct = scales::percent(n / sum(n), 1))
 
 ans_o3 <- results_raw |>
-  dplyr::filter(item == item_hard_id, model_id == "o3") |>
+  dplyr::filter(.data$item == item_hard_id, .data$model_id == "o3") |>
   dplyr::mutate(answer_clean = stringr::str_extract(answer, "[A-D]")) |>
   dplyr::count(answer_clean, name = "n") |>
   dplyr::mutate(pct = scales::percent(n / sum(n), 1))
@@ -452,7 +437,7 @@ o3_A  <- ans_o3  |> dplyr::filter(answer_clean == "A") |> dplyr::pull(pct)
 
 # Pull answer option texts for the hardest item
 opts <- questions_raw |>
-  dplyr::filter(item == item_hard_id) |>
+  dplyr::filter(.data$item == item_hard_id) |>
   dplyr::select(option_A, option_B, option_C, option_D) |>
   dplyr::slice(1)
 
