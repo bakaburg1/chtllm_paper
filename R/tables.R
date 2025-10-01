@@ -81,7 +81,7 @@ create_summary_table <- function(
 
   # Set up column labels with defaults and user overrides
   label_defaults <- list(
-    model_id = "Model",
+    model_id = "Model ID",
     model_type = "Model type",
     modality = "Prompt strategy",
     estimate = "Estimate",
@@ -473,7 +473,8 @@ create_questions_table <- function(questions) {
 #'
 #' @details The function processes model configuration data by:
 #' - Filtering out parser models
-#' - Formatting cost information with special handling for free/promotional models
+#' - Formatting cost information with special handling for free/promotional
+#' models
 #' - Converting text fields to proper case
 #' - Sorting by provider, cost, type, and model name
 #'
@@ -515,12 +516,12 @@ create_models_table <- function(models) {
     ) |>
     # Select and rename columns for display
     dplyr::select(
-      `Model ID` = "model_id",
-      Provider = "provider",
-      `Endpoint / deployment` = "model",
+      "Model ID" = "model_id",
+      "Provider" = "provider",
+      "Endpoint / deployment" = "model",
       "Type",
-      `Cost\n(USD per mln tokens)` = "cost_per_mln",
-      `Search\ncapability` = "search_capability"
+      "Cost\n(USD per mln tokens)" = "cost_per_mln",
+      "Search\ncapability" = "search_capability"
     ) |>
     # Create and style flextable
     flextable::flextable() |>
@@ -578,9 +579,6 @@ create_interaction_performance_table <- function(
   consistency_interaction,
   caption = NULL
 ) {
-  # Ensure required packages are available
-  rlang::check_installed(c("flextable", "scales"))
-
   # Set up formatting functions
   pct_fmt <- scales::label_percent(accuracy = 0.1)
   fmt_cell <- function(m, l, u) {
@@ -632,11 +630,11 @@ create_interaction_performance_table <- function(
       )
     ) |>
     dplyr::select(
-      Model = .data$model_id,
-      Strategy = .data$modality,
-      Accuracy,
-      `Parsing success`,
-      Consistency
+      "Model ID" = "model_id",
+      Strategy = "modality",
+      "Accuracy",
+      "Parsing success",
+      "Consistency"
     )
 
   # Create and style flextable
@@ -645,7 +643,7 @@ create_interaction_performance_table <- function(
       j = c("Accuracy", "Parsing success", "Consistency", "Strategy"),
       align = "center"
     ) |>
-    flextable::align(j = "Model", align = "left") |>
+    flextable::align(j = "Model ID", align = "left") |>
     flextable::theme_vanilla() |>
     flextable::fontsize(part = "header", size = 11) |>
     flextable::fontsize(part = "body", size = 10) |>
