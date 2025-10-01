@@ -10,8 +10,10 @@
 ^results$
 ^.cursorignore$
 ^.cursorrules$
+^.cursor$
 ^.env$
 ^logs$
 ^models$
 ^manuscript$
-_targets.yaml
+^_targets.yaml$
+
