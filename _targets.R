@@ -94,17 +94,6 @@ list(
     }
   ),
 
-  tar_target(
-    outputs_dir,
-    {
-      path <- here::here("outputs")
-      if (!dir.exists(path)) {
-        dir.create(path, recursive = TRUE)
-      }
-      path
-    }
-  ),
-
   # Define which status to reprocess
   tar_target(
     reprocess_status,
