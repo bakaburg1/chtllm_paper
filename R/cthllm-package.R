@@ -6,6 +6,8 @@
 #'
 #' @import dplyr
 #' @import ggplot2
+#' @importFrom stats cor median plogis qlogis quasibinomial
+#' @importFrom rlang :=
 #'
 #' @keywords internal
 "_PACKAGE"

@@ -22,7 +22,8 @@ provider, endpoint, type, cost, and search capabilities.
 The function processes model configuration data by:
 \itemize{
 \item Filtering out parser models
-\item Formatting cost information with special handling for free/promotional models
+\item Formatting cost information with special handling for free/promotional
+models
 \item Converting text fields to proper case
 \item Sorting by provider, cost, type, and model name
 }

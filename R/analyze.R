@@ -59,7 +59,7 @@ prepare_parsing_data <- function(results) {
         .default = "clean"
       ),
       # Convert to an **ordered** factor so that brms treats it as ordinal.
-      y = factor(parse_category, levels = levels_ordered, ordered = TRUE)
+      y = factor(.data$parse_category, levels = levels_ordered, ordered = TRUE)
     ) |>
     dplyr::select("item", "model_id", "modality", "y")
 }
