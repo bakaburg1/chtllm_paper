@@ -176,8 +176,6 @@ targets::tar_load(c(
 ))
 ```
 
-# Supplementary Tables
-
 ## Supplementary Table S1. Travel-medicine benchmark items
 
 Complete list of the multiple‑choice questions used in the travel‑medicine benchmark. For each item we report the source collection (International Society of Travel Medicine sample questions (CTH) or American Society of Tropical Medicine and Hygiene Certificate Programs sample questions (ASTMH)), the full question, and the four answer options (A-D) exactly as published. The correct answer is highlighted in green.
@@ -227,4 +225,9 @@ Median posterior accuracy and 95% credible intervals by model type and prompt st
 table_accuracy_by_modality
 ```
 
+:::
+
+# References
+
+::: {#refs}
 :::
