@@ -1,0 +1,187 @@
+---
+format:
+  dashboard:
+    navbar: false
+    theme: cosmo
+    css: poster.scss
+    dpi: 300
+execute:
+  echo: false
+---
+
+```{r setup_poster, include=FALSE}
+library(targets)
+library(here)
+library(dplyr)
+library(scales)
+
+tar_source(here::here("R")) # One plot needs a custom function
+tar_config_set(store = here::here("_targets"))
+tar_load(questions)
+tar_load(summaries_correctness_by_model)
+tar_load(n_replications)
+
+n_questions <- nrow(questions)
+n_models <- summaries_correctness_by_model |> distinct(model_id) |> nrow()
+
+best <- summaries_correctness_by_model |> arrange(desc(.prob)) |> slice(1)
+best_acc <- scales::percent(best$.prob, accuracy = 0.1)
+best_model <- best$model_id
+```
+
+## Row {.header-row height=max-content}
+
+### Column {width=10%}
+
+::: {.card}
+
+![](logo-ecdc.svg){.header-logo}
+
+:::
+
+
+### Column {width=80%}
+
+<p class="title">Performance of Large Language Models on travel medicine certificate multiple choice questions</p>
+
+<p class="authors">Francesco Baglivo†, Luigi De Angelis†, Angelo D'Ambrosio†, Federico Tecchio, Caterina Rizzo</p>
+
+<p class="equal">† Equal contribution</p>
+
+### Column {width=10%}
+
+::: {.card}
+![](logo-unipi.png){.header-logo}
+
+:::
+
+## Row {.separator-row}
+
+<hr>
+
+## Row {.content-row height=max-content}
+
+::: {.card title="Introduction"}
+
+Large language models (LLMs) now approach professional-level performance on medical MCQs.
+
+Travel medicine is dynamic and under-studied: region-specific risks and evolving recommendations.
+
+We benchmarked diverse models and prompting strategies on single-best-answer questions.
+
+:::
+
+::: {.card title="Methods"}
+
+**Questions**: 42 travel-medicine items (single correct option out of four).
+
+**Models**: Frontier, hosted open-source, and local quantised replicas.
+
+**Prompt strategies**: "cold" (answer only), "free" (brief rationale + answer), and "reasoning" (CoT).
+
+**Replications**: 5 per (item, model, prompt) cell to assess variability.
+
+**Metrics**: Accuracy, parsability (output format adherence), consistency (replication stability).
+
+**Bayesian modelling**: Hierarchical models to model model impact adjusted for items and prompt strategies.
+
+:::
+
+::: {.card title="Results"}
+
+**Reasoning models** (e.g., o3, Gemini 2.5 Pro) led the benchmark, especially if equipped with **internet search capabilities** (e.g., Sonar Reasoning).
+
+**Local or low-parameter count models** performed worst.
+
+**Prompting strategies had modest impact** at the top end; model class mattered more.
+
+:::
+
+## Row {.kpis-row height=max-content}
+
+```{r}
+#| label: kpis-questions
+#| content: valuebox
+#| title: "Questions"
+list(
+  icon = "question-circle",
+  color = "#008eca",
+  value = n_questions
+)
+```
+
+### Column {width=25%}
+
+```{r}
+#| label: kpis-models
+#| content: valuebox
+#| title: "Models"
+list(
+  icon = "motherboard",
+  color = "#3e5b84",
+  value = n_models
+)
+```
+
+### Column {width=25%}
+
+```{r}
+#| label: kpis-replications
+#| content: valuebox
+#| title: "Replications"
+list(
+  icon = "repeat",
+  color = "#008c75",
+  value = n_replications
+)
+```
+
+### Column {width=25%}
+
+```{r}
+#| label: kpis-best-accuracy
+#| content: valuebox
+#| title: "Best Accuracy"
+list(
+  icon = "trophy",
+  color = "#28b563",
+  value = sprintf("%s (%s)", best_acc, best_model)
+)
+```
+
+## Row {.plots-row height=max-content}
+
+### Column {width=30%}
+
+```{r}
+#| label: plot-accuracy
+#| fig-cap: "Posterior median accuracy across the questionnaire with 95% CrI."
+#| fig-width: 8
+#| fig-height: 15
+
+tar_read(correctness_plots)$by_model
+```
+
+### Column {width=70%}
+
+#### Row {height=max-content}
+
+```{r}
+#| label: plot-pareto-frontier
+#| fig-cap: "Trade-off between model accuracy and cost; Pareto-optimal models highlighted."
+#| fig-width: 16
+#| fig-height: 6
+
+tar_read(pareto_frontier_plot)
+```
+
+#### Row {height=max-content}
+
+```{r}
+#| label: plot-correctness-mosaic
+#| fig-cap: "Median posterior correctness per model and question."
+#| fig-width: 16
+#| fig-height: 8
+
+tar_read(correctness_mosaic_plot)
+```

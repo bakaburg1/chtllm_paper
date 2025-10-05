@@ -1,0 +1,100 @@
+// SCSS defaults
+//$font-size-root: 2rem;;
+
+// SCSS rules
+
+@page {
+  size: 841mm 1189mm; // A0 portrait
+  margin: 15mm;
+}
+
+html, body {
+  width: 841mm;
+  height: 1189mm;
+  margin: auto;
+  padding: 0;
+  background: #ffffff;
+  color: hsl(0, 0%, 10%, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+}
+
+.header-row {
+  .card {
+    border: none;
+  }
+
+  .title,
+  .authors {
+    text-align: center;
+  }
+
+  .title {
+    color: #3e5b84;
+    font-size: 18mm;
+    font-weight: bold;
+  }
+
+  .authors {
+    font-size: 7.5mm;
+  }
+
+  .equal {
+    font-size: 6mm;
+    color: #555555;
+  }
+}
+
+.header-logo {
+  height: 244px;
+  margin: 0 auto;
+}
+
+.separator-row {
+  hr {
+    border-top: none;
+    height: 10px;
+    background: linear-gradient(to right, rgb(40, 181, 99), rgb(0, 142, 202));
+    border-radius: 12px;
+  }
+}
+
+.kpis-row {
+  .card {
+    border-radius: 10px;
+    box-shadow: 0px 4px 7px 7px rgba(0, 0, 0, 0.26);
+  }
+
+  .card-body {
+    color: white;
+  }
+
+  .value-box-title {
+    font-size: 3em;
+    font-weight: bold;
+  }
+}
+
+.content-row {
+  .card {
+    font-size: 2rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    break-inside: avoid;
+  }
+
+  .card-header {
+    background-color: #69b023;
+    color: white;
+    font-weight: bold;
+  }
+}
+
+.plots-row {
+  .card {
+    border: none;
+  }
+
+  .figure {
+    margin: auto;
+  }
+}
