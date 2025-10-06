@@ -1,19 +1,11 @@
 ---
-title: "Performance of Large Language Models on travel medicine certificate multiple choice questions"
-author:
-  - "Francesco Baglivo"
-  - "Luigi De Angelis"
-  - "Angelo D’Ambrosio"
-  - "Federico Tecchio"
-  - "Caterina Rizzo"
-date: today
 format:
-  html:
-    theme: cosmo
-    toc: false
-    page-layout: full
-    self-contained: true
-    css: poster.css
+  dashboard:
+    navbar: false
+    theme:
+      - cosmo
+      - poster.scss
+    dpi: 300
 execute:
   echo: false
 ---
@@ -23,143 +15,246 @@ library(targets)
 library(here)
 library(dplyr)
 library(scales)
-targets::tar_source(here::here("R"))
-targets::tar_config_set(store = here::here("_targets"))
-targets::tar_load(questions)
-targets::tar_load(summaries_correctness_by_model)
-targets::tar_load(n_replications)
+
+tar_source(here::here("R")) # One plot needs a custom function
+tar_config_set(store = here::here("_targets"))
+tar_load(questions)
+tar_load(summaries_correctness_by_model)
+tar_load(n_replications)
+
 n_questions <- nrow(questions)
 n_models <- summaries_correctness_by_model |> distinct(model_id) |> nrow()
+
 best <- summaries_correctness_by_model |> arrange(desc(.prob)) |> slice(1)
 best_acc <- scales::percent(best$.prob, accuracy = 0.1)
 best_model <- best$model_id
 ```
 
-::: {.poster}
-::: {.poster-header}
 
-![](logo-ecdc.svg){.logo .left}
+```{r plot_theme_helpers, include=FALSE}
+library(ggplot2)
+library(ggrepel)
 
-::: {.title-block}
+poster_theme <- function(base_size = 28) {
+  ggplot2::theme(
+    text = ggplot2::element_text(size = base_size),
+    plot.title = ggplot2::element_text(size = base_size + 4, face = "bold"),
+    plot.subtitle = ggplot2::element_text(size = base_size - 2),
+    axis.title = ggplot2::element_text(size = base_size - 4),
+    axis.text = ggplot2::element_text(size = base_size - 6),
+    legend.title = ggplot2::element_text(size = base_size - 2),
+    legend.text = ggplot2::element_text(size = base_size - 6),
+    strip.text = ggplot2::element_text(size = base_size - 6),
+    plot.title.position = "plot"
+  )
+}
 
-# Performance of Large Language Models on travel medicine certificate multiple choice questions
-
-<p class="authors">Francesco Baglivo†, Luigi De Angelis†, Angelo D’Ambrosio†, Federico Tecchio, Caterina Rizzo</p>
-<p class="equal">† Equal contribution</p>
-
-:::
-
-![](logo-unipi.png){.logo .right}
-
-:::
-
-```{r kpis, results='asis'}
-html <- paste0(
-  '<section class="kpis">',
-  '<div class="kpi"><div class="value">', n_questions, '</div><div class="label">Questions</div></div>',
-  '<div class="kpi"><div class="value">', n_models, '</div><div class="label">Models</div></div>',
-  '<div class="kpi"><div class="value">', n_replications, '</div><div class="label">Replications</div></div>',
-  '<div class="kpi"><div class="value">', best_acc, '</div><div class="label">Best accuracy (', best_model, ')</div></div>',
-  '</section>'
-)
-knitr::asis_output(html)
+ggplot2::update_geom_defaults("point", list(size = 4))
+ggplot2::update_geom_defaults("text_repel", list(size = 6))
+ggplot2::update_geom_defaults("label_repel", list(size = 6))
 ```
 
-::: {.cols-3}
+
+## Row {.header-row height=max-content}
+
+### Column {width=10%}
 
 ::: {.card}
-### Introduction
 
-- Large language models (LLMs) now approach professional-level performance on medical MCQs.
-- Travel medicine is dynamic and under-studied: region-specific risks and evolving recommendations.
-- We benchmarked diverse models and prompting strategies on single-best-answer questions.
+![](logo-ecdc.svg){.header-logo}
 
 :::
+
+
+### Column {width=80%}
+
+<p class="title">Performance of Large Language Models on travel medicine certificate multiple choice questions</p>
+
+<p class="authors">Angelo D'Ambrosio†^1^, Francesco Baglivo†^2^, Luigi De Angelis†^2^, Federico Tecchio^2^, Caterina Rizzo^2^</p>
+
+### Column {width=10%}
 
 ::: {.card}
-### Methods
-
-- Questions: 42 travel-medicine items (single correct option A–D).
-- Models: Frontier, hosted open-source, and local quantised replicas.
-- Prompt strategies: "cold" (letter only), "free" (brief rationale + letter), and "reasoning" (CoT).
-- Replications: 5 per (item, model, prompt) cell to assess variability.
-- Metrics: Accuracy, parsability (format adherence), consistency (replication stability).
-- Bayesian modelling: Hierarchical models via Stan (brms), marginalised posterior summaries.
+![](logo-unipi.png){.header-logo}
 
 :::
 
-:::
+## Row {.separator-row}
 
-::: {.cols-2}
+<hr>
 
-::: {.card}
-### Overall accuracy
+## Row {.content-row height=max-content}
 
-::: {.figure}
-![](figs/overall_correctness.png){.img-half}
-<figcaption>Posterior median accuracy with 95% CrI by model.</figcaption>
-:::
+::: {.card title="Introduction"}
 
-:::
+**Large language models** (LLMs) now approach **professional-level performance** on medical MCQs.
 
-::: {.card}
-### Cost–accuracy Pareto frontier
+Travel medicine is dynamic and under-studied: region-specific risks and evolving recommendations.
 
-::: {.figure}
-![](figs/pareto_frontier.png){.img-half}
-<figcaption>Trade-off between model accuracy and cost; Pareto-optimal models highlighted.</figcaption>
-:::
+We benchmarked diverse models and prompting strategies on single-best-answer questions.
 
 :::
 
-:::
+::: {.card title="Methods"}
 
-::: {.card}
-### Results
+**Questions**: 42 travel-medicine items (single correct option out of four).
 
-- Reasoning models (e.g., o3, Gemini 2.5 Pro, Sonar Reasoning) led the benchmark.
-- Prompting effects were modest at the top end; model class mattered more.
-- Parsability often exceeded 90% for top models; smaller local models lagged.
+**Models**: A mix of frontier, open-source, and local quantised models.
 
-::::
+**Prompt strategies**: "cold" (direct answer only), "free" (brief rationale + answer), and "reasoning" (CoT).
 
-::: {.card .full}
-### Item-level performance
+**Replications**: 5 per (item, model, prompt) cell to assess variability.
 
-::: {.figure}
-![](figs/item_mosaic.png){.img-full}
-<figcaption>Median posterior correctness per model and question.</figcaption>
-:::
+**Metrics**: Accuracy, parsability (output format adherence), consistency (replication stability).
+
+**Bayesian modelling**: Hierarchical models to model model impact adjusted for items and prompt strategies.
 
 :::
 
-::: {.card}
-### Discussion
+::: {.card title="Results"}
 
-- Frontier systems now reach ~95–98% accuracy on this benchmark.
+**Reasoning models** (e.g., o3, Gemini 2.5 Pro) led the benchmark, especially if equipped with **internet search capabilities** (e.g., Sonar Reasoning).
+
+Performance also **dropped with parameter count**.
+
+**Local low-parameter count models** performed worst.
+
+**Prompting strategies had modest impact** at the top end; model class mattered more.
+
+**o3** consistently failed only on 1 question, but the answers **nevertheless followed guidelines**.
+
+:::
+
+## Row {.kpis-row height=max-content}
+
+```{r}
+#| label: kpis-questions
+#| content: valuebox
+#| title: "Questions"
+list(
+  icon = "question-circle",
+  color = "#008eca",
+  value = n_questions
+)
+```
+
+### Column {width=25%}
+
+```{r}
+#| label: kpis-models
+#| content: valuebox
+#| title: "Models"
+list(
+  icon = "motherboard",
+  color = "#3e5b84",
+  value = n_models
+)
+```
+
+### Column {width=25%}
+
+```{r}
+#| label: kpis-replications
+#| content: valuebox
+#| title: "Replications"
+list(
+  icon = "repeat",
+  color = "#008c75",
+  value = n_replications
+)
+```
+
+### Column {width=25%}
+
+```{r}
+#| label: kpis-best-accuracy
+#| content: valuebox
+#| title: "Best Accuracy"
+list(
+  icon = "trophy",
+  color = "#28b563",
+  value = sprintf("%s (%s)", best_acc, best_model)
+)
+```
+
+## Row {.plots-row height=max-content}
+
+### Column {width=50%}
+
+```{r}
+#| label: plot-accuracy
+#| fig-width: 14
+#| fig-height: 14
+
+tar_read(correctness_plots)$by_model +
+poster_theme(base_size = 24) +
+labs(
+  subtitle = "Posterior accuracy marginalised across items and replications.\nPoints: posterior median; bars: 95% CrI."
+) +
+theme(
+  plot.title.position = "plot",
+  legend.position = "bottom")
+```
+
+### Column
+
+```{r}
+#| label: plot-correctness-mosaic
+#| fig-width: 15
+#| fig-height: 15
+
+tar_read(correctness_mosaic_plot) +
+labs(y = NULL) +
+poster_theme(base_size = 24) +
+theme(
+  axis.text.x = element_text(size = 14)
+)
+```
+
+## Row {.plots-row height=max-content}
+
+```{r}
+#| label: plot-pareto-frontier
+#| fig-width: 20
+#| fig-height: 8
+
+p <- tar_read(pareto_frontier_plot) +
+  poster_theme(base_size = 15) +
+  labs(
+    subtitle = "Optimal models balance high accuracy with low operational costs.\nPoints = individual models; Lines = Pareto-efficient frontiers",
+    caption = NULL
+  )
+
+p$layers[[7]]$aes_params$size <- 5
+
+p
+```
+
+## Row {.content-row height=max-content}
+
+::: {.card title="Discussion"}
+
+- Frontier models now reach ~95–98% accuracy on this benchmark.
 - Search-augmented models can match high-end performance at lower cost.
 - Local models are cost-efficient but currently less accurate on complex items.
 
 :::
 
-::: {.card}
-### Conclusions
+::: {.card title="Conclusions"}
 
-- LLMs show clinically meaningful competence in travel-medicine MCQs.
+- LLMs can provide clinically meaningful support in travel-medicine scenarios.
 - Ongoing auditing and transparent reporting remain essential for deployment.
 
-#### Acknowledgments
-
-OpenAI's ChatGPT assisted in writing and code development. All ideas and methods are the authors'.
-
 :::
 
-:::
+## Row {.separator-row}
 
-::: {.poster-footer}
-Contact: corresponding author. Logos are placeholders (ECDC, University of Pisa).
-:::
+<hr>
 
-:::
+## Row {.footer-row}
 
+**Contacts**: angelo.dambrosio@ecdc.europa.eu; luigi.deangelis@unipi.it; francesco.baglivo@unipi.it
 
+**Affiliations**: ^1^ ECDC; ^2^ University of Pisa
+
+**Contributions**: † Denotes equal contribution

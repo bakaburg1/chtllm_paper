@@ -1,7 +1,20 @@
-// SCSS defaults
-//$font-size-root: 2rem;;
+/*-- scss:defaults --*/
 
-// SCSS rules
+// Color variables
+$text-color: hsl(0, 0%, 10%, 1);
+$title-color: #3e5b84;
+$footer-color: #555555;
+$card-header-bg: #69b023;
+$card-header-color: #ffffff;
+$card-body-color: #ffffff;
+$kpi-shadow: rgba(0, 0, 0, 0.26);
+$separator-gradient: linear-gradient(
+  to right,
+  rgb(40, 181, 99),
+  rgb(0, 142, 202));
+$card-border: #dee2e6;
+
+/*-- scss:rules --*/
 
 @page {
   size: 841mm 1189mm; // A0 portrait
@@ -14,7 +27,7 @@ html, body {
   margin: auto;
   padding: 0;
   background: #ffffff;
-  color: hsl(0, 0%, 10%, 1);
+  color: $text-color;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -29,18 +42,19 @@ html, body {
   }
 
   .title {
-    color: #3e5b84;
-    font-size: 18mm;
+    color: $title-color;
+    font-size: 4.5rem;
     font-weight: bold;
   }
 
   .authors {
-    font-size: 7.5mm;
+    font-size: 1.9rem;
+    color: $text-color;
   }
 
   .equal {
-    font-size: 6mm;
-    color: #555555;
+    font-size: 1.5rem;
+    color: $footer-color;
   }
 }
 
@@ -53,7 +67,7 @@ html, body {
   hr {
     border-top: none;
     height: 10px;
-    background: linear-gradient(to right, rgb(40, 181, 99), rgb(0, 142, 202));
+    background: $separator-gradient;
     border-radius: 12px;
   }
 }
@@ -61,30 +75,33 @@ html, body {
 .kpis-row {
   .card {
     border-radius: 10px;
-    box-shadow: 0px 4px 7px 7px rgba(0, 0, 0, 0.26);
+    box-shadow: 0px 4px 7px 7px $kpi-shadow;
+    color: $text-color;
   }
 
   .card-body {
-    color: white;
+    color: $card-body-color;
   }
 
   .value-box-title {
     font-size: 3em;
     font-weight: bold;
+    color: $card-header-color;
   }
 }
 
 .content-row {
   .card {
     font-size: 2rem;
-    border: 2px solid #dee2e6;
+    border: 2px solid $card-border;
     border-radius: 8px;
     break-inside: avoid;
+    color: $text-color;
   }
 
   .card-header {
-    background-color: #69b023;
-    color: white;
+    background-color: $card-header-bg;
+    color: $card-header-color;
     font-weight: bold;
   }
 }
@@ -92,9 +109,51 @@ html, body {
 .plots-row {
   .card {
     border: none;
+    color: $text-color;
   }
 
   .figure {
     margin: auto;
+    color: $text-color;
+  }
+}
+
+.footer-row {
+  .card {
+    border: none;
+    color: $text-color;
+    font-size: 1.5rem;
+    color: $footer-color;
+  }
+}
+
+@media print {
+
+  /* keep colors/shadows; also enable “Background graphics” in the dialog */
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .kpis-row  {
+    .card{
+      /* prefer filter shadow for print */
+      box-shadow: none !important;
+      filter: drop-shadow(0 4px 7px $kpi-shadow);
+      -webkit-filter: drop-shadow(0 4px 7px $kpi-shadow);
+      background: #fff; /* required so the alpha shape is correct */
+      break-inside: avoid; /* don't split across pages */
+      page-break-inside: avoid; /* legacy synonym */
+      position: relative;
+      z-index: 0;
+      margin-bottom: 12px; /* ensure the next card doesn't cover the shadow */
+      color: $text-color;
+    }
+
+    /* neutralize usual print troublemakers */
+    .card, .card * {
+      transform: none !important; /* transforms create new layers and kill shadows in print */
+      overflow: visible !important; /* avoid clipping the shadow */
+    }
+
+    /* if you’re using grid/flex, make sure there is real spacing in print */
+    .cards { gap: 12px !important; }
   }
 }
