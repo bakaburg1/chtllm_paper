@@ -61,7 +61,7 @@ ggplot2::update_geom_defaults("label_repel", list(size = 6))
 
 ::: {.card}
 
-![](logo-ecdc.svg){.header-logo}
+![](img/logo-ecdc.svg){.header-logo}
 
 :::
 
@@ -75,7 +75,7 @@ ggplot2::update_geom_defaults("label_repel", list(size = 6))
 ### Column {width=10%}
 
 ::: {.card}
-![](logo-unipi.png){.header-logo}
+![](img/logo-unipi.png){.header-logo}
 
 :::
 
